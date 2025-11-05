@@ -49,6 +49,14 @@ namespace SeganX.Realtime.Internal
             clientInfo = new ClientInfo();
         }
 
+#if UNITY_EDITOR
+        public void Cleanup()
+        {
+            transmitter.Stop();
+            clientInfo = new ClientInfo();
+        }
+#endif
+
         public void Update(float elapsedTime)
         {
             transmitter.Update(elapsedTime);
@@ -132,7 +140,7 @@ namespace SeganX.Realtime.Internal
             });
         }
 
-        public void CreateRoom(ushort openTimeout, byte[] properties, MatchmakingParams matchmaking, System.Action<Error, short, sbyte> callback)
+        public void CreateRoom(byte capacity, byte joinTimeout, byte[] properties, MatchmakingParams matchmaking, System.Action<Error, short, sbyte> callback)
         {
             if (clientInfo.device == null || clientInfo.token == 0) return;
 
@@ -148,14 +156,15 @@ namespace SeganX.Realtime.Internal
                 .AppendByte((byte)MessageType.CreateRoom)
                 .AppendUint(clientInfo.token)
                 .AppendShort(clientInfo.id)
-                .AppendUshort(openTimeout)
+                .AppendByte(capacity)
+                .AppendByte(joinTimeout)
                 .AppendBytes(properties, 32)
                 .AppendInt(matchmaking.a)
                 .AppendInt(matchmaking.b)
                 .AppendInt(matchmaking.c)
                 .AppendInt(matchmaking.d);
 
-            Debug.Log($"{logName} Create room Token:{clientInfo.token} Id:{clientInfo.id} Timeout:{openTimeout} Matchmaking:{matchmaking}");
+            Debug.Log($"{logName} Create room Token:{clientInfo.token} Id:{clientInfo.id} Capacity:{capacity} Timeout:{joinTimeout} Matchmaking:{matchmaking}");
             transmitter.SendRequestToServer(MessageType.CreateRoom, sendBuffer.Bytes, sendBuffer.Length, DelayFactor, (error, buffer) =>
             {
 
@@ -238,6 +247,9 @@ namespace SeganX.Realtime.Internal
         public void SendReliable(sbyte targetId, BufferWriter data)
         {
             if (clientInfo.device == null || clientInfo.token == 0) return;
+#if UNITY_EDITOR
+            //Debug.Log($"{logName} SendReliable {targetId}");
+#endif
             transmitter.SendMessageReliable(targetId, data.Bytes, (byte)data.Length);
         }
 

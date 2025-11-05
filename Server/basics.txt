@@ -61,7 +61,8 @@ Create room
 1	type = 20
 4	token
 2	id
-2	open time out
+1   capacity;
+1	join timeout
 32  properties
 16	matchmaking int x 4
 

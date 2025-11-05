@@ -58,8 +58,11 @@ namespace SeganX.Realtime.Internal
                 Debug.Log($"{logName} Sent request to server Type:{messageType} Size:{dataSize}");
         }
 
-        public void SendMessageReliable(sbyte targetIndex, byte[] data, byte dataSize, int retryCount = 20, float retryDelay = 0.5f)
+        public void SendMessageReliable(sbyte targetIndex, byte[] data, byte dataSize, int retryCount = 40, float retryDelay = 0.05f)
         {
+#if UNITY_EDITOR
+            //Debug.Log($"{logName} SendReliable {reliable} {targetIndex}");
+#endif
             reliable?.SendReliable(targetIndex, data, dataSize, retryCount, retryDelay);
         }
 
@@ -118,9 +121,6 @@ namespace SeganX.Realtime.Internal
             var sender = receivedBuffer.ReadSbyte();
             var error = sender < 0 ? (Error)sender : Error.NoError;
 
-            if (error == Error.Expired)
-                clientInfo.token = 0;
-
             switch (messageType)
             {
                 case MessageType.Unreliable: OnReceivedMessage(error, sender, receivedBuffer, receivedBuffer.ReadByte()); break;
@@ -134,6 +134,9 @@ namespace SeganX.Realtime.Internal
 
         private void ReceivedRequest(MessageType messageType, Error error)
         {
+            if (error == Error.Expired)
+                clientInfo.token = 0;
+
             var request = requestsPool.Find(x => x.type == messageType);
             if (request == null) return;
 

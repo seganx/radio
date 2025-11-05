@@ -170,6 +170,13 @@ namespace SeganX.Realtime
             });
         }
 
+#if UNITY_EDITOR
+        public static void Cleanup()
+        {
+            messenger.Cleanup();
+        }
+#endif
+
         private static void Login(Action callback = null)
         {
             if (messenger.Stopped || logingin) return;
@@ -187,11 +194,11 @@ namespace SeganX.Realtime
             });
         }
 
-        public static void CreateRoom(string playerName, ushort openTimeout, byte[] properties, MatchmakingParams matchmaking, Action<short, sbyte> callback)
+        public static void CreateRoom(string playerName, byte capacity, byte joinTimeout, byte[] properties, MatchmakingParams matchmaking, Action<short, sbyte> callback)
         {
-            messenger.CreateRoom(openTimeout, properties, matchmaking, (error, roomId, playerId) =>
+            messenger.CreateRoom(capacity, joinTimeout, properties, matchmaking, (error, roomId, playerId) =>
             {
-                if (ErrorExist(error, () => CreateRoom(playerName, openTimeout, properties, matchmaking, callback))) return;
+                if (ErrorExist(error, () => CreateRoom(playerName, capacity, joinTimeout, properties, matchmaking, callback))) return;
                 callback?.Invoke(roomId, playerId);
                 AddPlayer(playerId, playerName);
             });
@@ -282,6 +289,9 @@ namespace SeganX.Realtime
 
         private static void SendReliable(Target target, BufferWriter data, sbyte otherId)
         {
+#if UNITY_EDITOR
+            //Debug.Log($"[Radio] SendReliable {target} {otherId}");
+#endif
             switch (target)
             {
                 case Target.All:

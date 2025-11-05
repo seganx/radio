@@ -52,9 +52,10 @@ Lobby;
 
 typedef struct Room
 {
+    byte    capacity;
     sbyte   count;
     ulong   open_time;
-    ulong   open_timeout;
+    ulong   join_timeout;
     byte    properties[ROOM_PROP_LEN];
     sint    matchmaking[ROOM_PARAMS];
     Player* players[ROOM_CAPACITY];
@@ -64,7 +65,6 @@ Room;
 typedef struct Config
 {
     ushort  port;
-    sbyte   room_capacity;
     uint    player_timeout;
     uint    player_master_timeout;
 } 
@@ -140,7 +140,8 @@ typedef struct Create
     byte    type;
     uint    token;
     short   id;
-    ushort  open_timeout;
+    byte    capacity;
+    byte    join_timeout;
     byte    properties[ROOM_PROP_LEN];
     sint    matchmaking[ROOM_PARAMS];
 }

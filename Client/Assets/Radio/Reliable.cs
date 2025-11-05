@@ -33,7 +33,7 @@ namespace SeganX.Realtime.Internal
                 AcksCache.Add(-1);
         }
 
-        public void SendReliable(sbyte targetIndex, byte[] data, byte dataSize, int retryCount = 10, float retryDelay = 0.5f)
+        public void SendReliable(sbyte targetIndex, byte[] data, byte dataSize, int retryCount = 20, float retryDelay = 0.1f)
         {
             if (dataSize > 235)
             {
@@ -65,7 +65,9 @@ namespace SeganX.Realtime.Internal
             else
                 ReadyMessages.Add(message);
 
-            //Debug.Log($"{logName} Send Reliable Target:{targetIndex} Ack:{AckNumber}");
+#if UNITY_EDITOR
+            //Debug.Log($"{logName} Send Reliable Target:{targetIndex} Ack:{AckNumber}");            
+#endif
         }
 
         public void Update(float elapsedTime)
@@ -88,7 +90,9 @@ namespace SeganX.Realtime.Internal
             if (sender < 0 || sender >= AcksCache.Capacity) return;
 
             byte ack = receivedBuffer.ReadByte();
+#if UNITY_EDITOR
             //Debug.Log($"{logName} Received Reliable Sender:{sender} Ack:{ack}");
+#endif
 
             SendRelied(sender, ack);
 
@@ -107,8 +111,9 @@ namespace SeganX.Realtime.Internal
                 return;
             }
             byte ack = receivedBuffer.ReadByte();
-
+#if UNITY_EDITOR
             //Debug.Log($"{logName} Received Relied Sender:{sender} Ack:{ack}");
+#endif
 
             var message = SendingMessages.Find(x => x.ack == ack && x.targetIndex == sender);
             if (message != null)
@@ -125,8 +130,9 @@ namespace SeganX.Realtime.Internal
             {
                 socket.Send(serverAddress, message.buffer.Bytes, message.buffer.Length);
                 message.retryCount--;
-
+#if UNITY_EDITOR
                 //Debug.Log($"{logName} Send Reliable Target:{message.targetIndex} Ack:{message.ack}");
+#endif
             }
             else SendingMessages.Remove(message);
         }
@@ -142,8 +148,9 @@ namespace SeganX.Realtime.Internal
                 .AppendSbyte(sender)
                 .AppendByte(ack);
             socket.Send(serverAddress, sendBuffer.Bytes, sendBuffer.Length);
-
+#if UNITY_EDITOR
             //Debug.Log($"{logName} Send Relied Target:{sender} Ack:{ack}");
+#endif
         }
     }
 }

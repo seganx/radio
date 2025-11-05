@@ -205,7 +205,7 @@ void server_process_create(byte* buffer, const byte* from)
     }
 
     if (is_player_not_joined_room(player))
-        room_create(&server, player, request->open_timeout * 1000, request->properties, request->matchmaking);
+        room_create(&server, player, request->capacity, request->join_timeout * 1000, request->properties, request->matchmaking);
 
     if (is_player_not_joined_room(player))
     {
@@ -496,7 +496,6 @@ Config LoadConfig()
 
     Config config = { 0 };
     config.port = 36000;
-    config.room_capacity = ROOM_CAPACITY;
     config.player_timeout = 300000;
     config.player_master_timeout = 5000;
 
@@ -514,7 +513,6 @@ Config LoadConfig()
         sx_json_node* root = sx_json_parse(&json, json_string, sx_str_len(json_string));
 
         config.port = sx_json_read_int(root, "port", config.port);
-        config.room_capacity = sx_json_read_int(root, "room_capacity", config.room_capacity);
         config.player_timeout = sx_json_read_int(root, "player_timeout", config.player_timeout);
         config.player_master_timeout = sx_json_read_int(root, "player_master_timeout", config.player_master_timeout);
 
@@ -540,7 +538,6 @@ int main()
         sx_time_print(t, 64, sx_time_now());
         sx_print("server started on %s", t);
         sx_print("port: %d", config.port);
-        sx_print("room capacity: %d", config.room_capacity);
         sx_print("player timeout: %d", config.player_timeout);
         sx_print("player master timeout: %d", config.player_master_timeout);
     }

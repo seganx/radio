@@ -136,7 +136,7 @@ int room_find_free(Server* server)
     for (short r = 0; r < ROOM_COUNT; r++)
     {
         Room* room = &server->rooms[r];
-        if (room->count < server->config.room_capacity)
+        if (room->count < room->capacity)
             return r;
     }
     return -1;
@@ -145,8 +145,8 @@ int room_find_free(Server* server)
 bool room_is_open(const Room* room, const ulong now)
 {
     if (room->open_time == 0) return false;  // this means that the room is never openned!
-    if (room->open_timeout == 0) return true;
-    return sx_time_diff(now, room->open_time) <= room->open_timeout;
+    if (room->join_timeout == 0) return true;
+    return sx_time_diff(now, room->open_time) <= room->join_timeout;
 }
 
 bool room_is_match(Room* room, int* params)
@@ -162,13 +162,14 @@ bool room_is_match(Room* room, int* params)
     return result;
 }
 
-bool room_create(Server* server, Player* player, ulong timeout, byte* properties, sint* matchmaking)
+bool room_create(Server* server, Player* player, byte capacity, ulong timeout, byte* properties, sint* matchmaking)
 {
     int roomid = room_find_empty(server);
     if (roomid < 0) return false;
     Room* room = &server->rooms[roomid];
+    room->capacity = min(capacity, ROOM_CAPACITY);
+    room->join_timeout = timeout;
     room->open_time = sx_time_now();
-    room->open_timeout = timeout;
     sx_mem_copy(room->properties, properties, ROOM_PROP_LEN);
     sx_mem_copy(room->matchmaking, matchmaking, ROOM_PARAMS * sizeof(sint));
     return room_add_player(server, player, roomid);
@@ -180,7 +181,7 @@ bool room_join(Server* server, Player* player, int* params)
     for (short roomid = 0; roomid < ROOM_COUNT; roomid++)
     {
         Room* room = &server->rooms[roomid];
-        if (room->count < 1 || room->count >= server->config.room_capacity) continue;
+        if (room->count < 1 || room->count >= room->capacity) continue;
         if (room_is_open(room, now) && room_is_match(room, params))
             return room_add_player(server, player, roomid);
     }
