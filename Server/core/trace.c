@@ -1,10 +1,13 @@
-#if defined(_WIN32)
-#include <Windows.h>
-#endif
-
 #include <string.h>
 #include <time.h>
 #include <signal.h>
+
+#if defined(_WIN32)
+#include <Windows.h>
+#else
+#include <asm-generic/siginfo.h>
+#include <asm-generic/signal.h>
+#endif
 
 #include "memory.h"
 #include "trace.h"
@@ -46,7 +49,7 @@ typedef struct memory_block
     char                    sign[16];		//! sign to check if the block is a memory block. It's different from protection sign
     char*                   file;
     int                     line;
-    uint                    size;
+    sx_uint                    size;
     bool                    corrupted;
     struct memory_block*    next;
     struct memory_block*    prev;
@@ -57,7 +60,7 @@ typedef struct memory_tracker
 {
     struct memory_block*    root;
     bool                    enable;
-    sint                    num_corruptions;
+    sx_int                    num_corruptions;
 }
 memory_tracker;
 
@@ -80,8 +83,8 @@ typedef struct trace_object
     const char*            filename;
 #endif
 #if (SEGANX_TRACE_CALLSTACK || SEGANX_TRACE_PROFILER)
-    uint                   callstack_count;
-    uint                   callstack_index;
+    sx_uint                   callstack_count;
+    sx_uint                   callstack_index;
     struct trace_info*     callstack_array;
 #endif
 #if SEGANX_TRACE_MEMORY
@@ -111,7 +114,7 @@ static const char* trace_get_filename(const char* filename)
 
 static SEGAN_LIB_INLINE void trace_mem_check(memory_block* mb)
 {
-    byte* p = (byte*)mb + sizeof(memory_block);
+    sx_byte* p = (sx_byte*)mb + sizeof(memory_block);
 
     //	check beginning of memory block
     if (memcmp(p, MEM_PROTECTION_SIGN, MEM_PROTECTION_SIZE))
@@ -126,7 +129,7 @@ static SEGAN_LIB_INLINE void trace_mem_check(memory_block* mb)
     }
 }
 
-static SEGAN_LIB_INLINE memory_code_result trace_mem_code(void* p, const uint realsizeinbyte)
+static SEGAN_LIB_INLINE memory_code_result trace_mem_code(void* p, const sx_uint realsizeinbyte)
 {
     memory_code_result res;
     if (!p)
@@ -144,14 +147,14 @@ static SEGAN_LIB_INLINE memory_code_result trace_mem_code(void* p, const uint re
     memcpy(res.mb->sign, MEM_PROTECTION_SIGN, MEM_PROTECTION_SIZE);
 
     // prepare the result
-    p = (byte*)p + sizeof(memory_block);
-    res.p = (byte*)p + MEM_PROTECTION_SIZE;
+    p = (sx_byte*)p + sizeof(memory_block);
+    res.p = (sx_byte*)p + MEM_PROTECTION_SIZE;
 
     //	sign beginning of memory block
     memcpy(p, MEM_PROTECTION_SIGN, MEM_PROTECTION_SIZE);
 
     //	sign end of memory block
-    memcpy((byte*)res.p + realsizeinbyte, MEM_PROTECTION_SIGN, MEM_PROTECTION_SIZE);
+    memcpy((sx_byte*)res.p + realsizeinbyte, MEM_PROTECTION_SIGN, MEM_PROTECTION_SIZE);
 
     return res;
 }
@@ -166,7 +169,7 @@ static SEGAN_LIB_INLINE memory_code_result trace_mem_decode(const void* p)
     }
     else
     {
-        res.mb = (memory_block*)((byte*)p - MEM_PROTECTION_SIZE - sizeof(memory_block));
+        res.mb = (memory_block*)((sx_byte*)p - MEM_PROTECTION_SIZE - sizeof(memory_block));
         res.p = (void*)p;
 
         // check protection sign for memory block
@@ -217,11 +220,11 @@ static SEGAN_LIB_INLINE void trace_mem_pop(memory_block* mb)
     }
 }
 
-static uint trace_mem_report_compute_num(bool only_corrupted)
+static sx_uint trace_mem_report_compute_num(bool only_corrupted)
 {
     if (!s_current_object->mem_tracker->root) return 0;
 
-    uint result = 0;
+    sx_uint result = 0;
     memory_block* leaf = s_current_object->mem_tracker->root;
     while (leaf)
     {
@@ -266,7 +269,7 @@ static void trace_mem_report(FILE* f, bool only_corrupted)
     }
 }
 
-SEGAN_LIB_INLINE void* trace_mem_alloc(const uint size_in_byte, const char* file, const int line)
+SEGAN_LIB_INLINE void* trace_mem_alloc(const sx_uint size_in_byte, const char* file, const int line)
 {
     void* res = null;
 
@@ -299,7 +302,7 @@ SEGAN_LIB_INLINE void* trace_mem_alloc(const uint size_in_byte, const char* file
 }
 
 
-SEGAN_LIB_API void* trace_mem_calloc(const uint size_in_byte, const char* file, const int line)
+SEGAN_LIB_API void* trace_mem_calloc(const sx_uint size_in_byte, const char* file, const int line)
 {
     void* res = trace_mem_alloc(size_in_byte, file, line);
     mem_set(res, 0, size_in_byte);
@@ -307,7 +310,7 @@ SEGAN_LIB_API void* trace_mem_calloc(const uint size_in_byte, const char* file, 
 }
 
 
-SEGAN_LIB_INLINE void* trace_mem_realloc(void* p, const uint new_size_in_byte, const char* file, const int line)
+SEGAN_LIB_INLINE void* trace_mem_realloc(void* p, const sx_uint new_size_in_byte, const char* file, const int line)
 {
     if (!new_size_in_byte)
         return trace_mem_free(p);
@@ -416,7 +419,7 @@ SEGAN_LIB_INLINE void* trace_mem_free(const void* p)
 
 #if SEGANX_TRACE_CRASHRPT
 static void trace_set_crash_handler(void);
-static void trace_app_crashed(const char* reason, dword code);
+static void trace_app_crashed(const char* reason, sx_dword code);
 #endif // SEGANX_TRACE_CRASHRPT
 
 
@@ -436,7 +439,7 @@ static SEGAN_INLINE long trace_get_current_tick()
 
 
 #if (SEGANX_TRACE_CALLSTACK || SEGANX_TRACE_PROFILER || SEGANX_TRACE_CRASHRPT || SEGANX_TRACE_MEMORY)
-SEGAN_LIB_API void trace_attach(uint stack_size, const char* filename)
+SEGAN_LIB_API void trace_attach(sx_uint stack_size, const char* filename)
 {
     if (s_current_object != null) return;
     s_current_object = (struct trace_object*)calloc(1, sizeof(struct trace_object));
@@ -531,9 +534,9 @@ SEGAN_LIB_API void trace_push_param(const char * file, const int line, const cha
         va_list args;
         va_start(args, function);
 #if defined(_WIN32)
-        sint len = vsnprintf_s(0, 0, _TRUNCATE, function, args) + 1;
+        sx_int len = vsnprintf_s(0, 0, _TRUNCATE, function, args) + 1;
 #else
-        sint len = vsnprintf(0, 0, function, args) + 1;
+        sx_int len = vsnprintf(0, 0, function, args) + 1;
 #endif
         if (len < 128)
 #if defined(_WIN32)
@@ -577,9 +580,9 @@ SEGAN_LIB_API void trace_pop(void)
 static void trace_callstack_report(FILE* f)
 {
     fprintf(f, "\nUser defined callstack:\n");
-    for (uint i = 0; i < s_current_object->callstack_index; ++i)
+    for (sx_uint i = 0; i < s_current_object->callstack_index; ++i)
     {
-        for (uint j = 0; j < i; ++j) fprintf(f, "  ");
+        for (sx_uint j = 0; j < i; ++j) fprintf(f, "  ");
 #ifndef NDEBUG
         fprintf(f, "%s(%d): %s\n", s_current_object->callstack_array[i].file, s_current_object->callstack_array[i].line, s_current_object->callstack_array[i].func);
 #else
@@ -601,7 +604,7 @@ static void trace_callstack_report(FILE* f)
 #define  CRASHED_PURE_CALL                  "The thread tried to call an abstracted uninitialized virtual function!"
 #define  CRASHED_INVALID_PARAMETER          "Call a function with invalid parameter!"
 #define  CRASHED_ARRAY_BOUNDS               "The thread tried to access an array element that is out of bounds and the underlying hardware supports bounds checking."
-#define  CRASHED_DATATYPE_MISALIGNMENT      "The thread tried to read or write data that is misaligned on hardware that does not provide alignment. For example, 16-bit values must be aligned on 2-byte boundaries; 32-bit values on 4-byte boundaries, and so on."
+#define  CRASHED_DATATYPE_MISALIGNMENT      "The thread tried to read or write data that is misaligned on hardware that does not provide alignment. For example, 16-bit values must be aligned on 2-sx_byte boundaries; 32-bit values on 4-sx_byte boundaries, and so on."
 #define  CRASHED_FLT_DENORMAL               "One of the operands in a floating-point operation is denormal. A denormal value is one that is too small to represent as a standard floating-point value."
 #define  CRASHED_FLT_DIVIDE_BY_ZERO         "The thread tried to divide a floating-point value by a floating-point divisor of zero."
 #define  CRASHED_FLT_INEXACT                "The result of a floating-point operation cannot be represented exactly as a decimal fraction."
@@ -617,7 +620,7 @@ static void trace_callstack_report(FILE* f)
 #define  CRASHED_SINGLE_STEP                "A trace trap or other single-instruction mechanism signaled that one instruction has been executed."
 #define  CRASHED_STACK_OVERFLOW             "The thread/process used up its stack. Stack overflow!"
 
-static void trace_app_crashed(const char* reason, dword code)
+static void trace_app_crashed(const char* reason, sx_dword code)
 {
 #ifdef _WIN32
     FILE* fstr = null;
@@ -666,7 +669,7 @@ static void trace_crash_signal_handler(int sig)
 
 LONG WINAPI crash_seh_handler(__in PEXCEPTION_POINTERS pExceptionPtrs)
 {
-    dword ecode = pExceptionPtrs->ExceptionRecord->ExceptionCode;
+    sx_dword ecode = pExceptionPtrs->ExceptionRecord->ExceptionCode;
     switch (ecode)
     {
         case EXCEPTION_ACCESS_VIOLATION:		trace_app_crashed(CRASHED_ACCESS_VIOLATION, ecode); break;
@@ -833,7 +836,7 @@ static void trace_set_crash_handler(void)
     sigaddset(&sigset, SIGFPE);
 
     struct sigaction sa;
-    sa.sa_sigaction = trace_signal_handler;
+    sa.sa_handler = trace_signal_handler;
     sa.sa_mask = sigset;
     sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
 

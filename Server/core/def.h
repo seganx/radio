@@ -9,19 +9,29 @@
 #ifndef DEFINED_def
 #define DEFINED_def
 
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <math.h>
+
+
 //////////////////////////////////////////////////////////////////////////
 //  basic type definitions
 //////////////////////////////////////////////////////////////////////////
 
-typedef signed char				sbyte;
-typedef unsigned char		    byte;
-typedef unsigned short		    ushort, wchar;
-typedef signed long			    sint;
-typedef unsigned long		    uint, dword;
-typedef long long			    int64;
-typedef unsigned long long		ulong, uint64;
-typedef void*                   handle;
-typedef int					    hresult;
+typedef signed char				sx_sbyte;
+typedef unsigned char		    sx_byte;
+typedef unsigned short		    sx_ushort, 	sx_wchar;
+typedef signed long			    sx_int;
+typedef unsigned long		    sx_uint, 	sx_dword;
+typedef long long			    sx_int64;
+typedef unsigned long long		sx_ulong,	sx_uint64;
+typedef void*                   sx_handle;
+typedef int					    sx_hresult;
+
+
+
 
 #if __cplusplus
 #else
@@ -128,20 +138,20 @@ typedef unsigned char bool;
 #define sx_flag_add(set, flag)				( set |= flag )
 #define sx_flag_rem(set, flag)				( set &= ~flag )
 
-// some useful functions for byte operations
-#define sx_byte_of(var, index)				( ( (byte*)(&var) )[index] )
-#define sx_1th_byte_of(var)					( ( (byte*)(&var) )[0] )
-#define sx_2th_byte_of(var)					( ( (byte*)(&var) )[1] )
-#define sx_3th_byte_of(var)					( ( (byte*)(&var) )[2] )
-#define sx_4th_byte_of(var)					( ( (byte*)(&var) )[3] )
+// some useful functions for sx_byte operations
+#define sx_byte_of(var, index)				( ( (sx_byte*)(&var) )[index] )
+#define sx_1th_byte_of(var)					( ( (sx_byte*)(&var) )[0] )
+#define sx_2th_byte_of(var)					( ( (sx_byte*)(&var) )[1] )
+#define sx_3th_byte_of(var)					( ( (sx_byte*)(&var) )[2] )
+#define sx_4th_byte_of(var)					( ( (sx_byte*)(&var) )[3] )
 
 #define sx_1th_word_of(var)					( ( (word*)(&var) )[0] )
 #define sx_2th_word_of(var)					( ( (word*)(&var) )[1] )
 
-#define sx_fourcc(ch0, ch1, ch2, ch3)		( (dword)(byte)(ch0) | ((dword)(byte)(ch1) << 8) | ((dword)(byte)(ch2) << 16) | ((dword)(byte)(ch3) << 24 ) )
+#define sx_fourcc(ch0, ch1, ch2, ch3)		( (sx_dword)(sx_byte)(ch0) | ((sx_dword)(sx_byte)(ch1) << 8) | ((sx_dword)(sx_byte)(ch2) << 16) | ((sx_dword)(sx_byte)(ch3) << 24 ) )
 
 //!	takes a structure name s, and a field name f in s
-#define sx_offset_of(s, f)		        	( (dword)&( ((s *)0)->f ) )
+#define sx_offset_of(s, f)		        	( (sx_dword)&( ((s *)0)->f ) )
 
 //! return number of items in a static array
 #define sx_array_count(x)					( sizeof(x) / sizeof(x[0]) )
@@ -154,6 +164,18 @@ typedef unsigned char bool;
 #define PP_CAT_I(a, b) PP_CAT_II(~, a ## b)
 #define PP_CAT_II(p, res) res
 #define sx_unique_name(base) PP_CAT(base, __COUNTER__)
+
+
+//! string conversions to support multiplatforms
+#if	defined(_WIN32)
+	#define	PATH_PART	'/'
+	#define sx_snprintf(buf, size, fmt, ...)       _snprintf_s((buf), (size), _TRUNCATE, (fmt), ##__VA_ARGS__)
+#elif defined(_MAC)
+	//#define	PATH_PART
+#else
+	//#define	PATH_PART
+	#define sx_snprintf(buf, size, fmt, ...)       snprintf((buf), (size), (fmt), ##__VA_ARGS__)
+#endif
 
 
 //	use debug output window in IDE
@@ -171,12 +193,6 @@ typedef unsigned char bool;
 #pragma warning(disable:4275)
 #endif
 
-
-//! includes
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
 
 
 #endif	//	DEFINED_def

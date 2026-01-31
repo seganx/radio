@@ -1,32 +1,32 @@
-#include "string.h"
-
 #include <ctype.h>
 #include <string.h>
+
+#include "string.h"
 
 SEGAN_LIB_INLINE char sx_str_upper(char c) { return toupper(c); }
 SEGAN_LIB_INLINE char sx_str_lower(char c) { return tolower(c); }
 
-SEGAN_LIB_INLINE uint sx_str_len(const char* str) { return str ? (uint)strlen(str) : 0; }
-SEGAN_LIB_INLINE sint sx_str_cmp(const char* str1, const char* str2) { return str1 && str2 ? strcmp(str1, str2) : (str1 ? 1 : (str2 ? -1 : 0)); }
+SEGAN_LIB_INLINE sx_uint sx_str_len(const char* str) { return str ? (sx_uint)strlen(str) : 0; }
+SEGAN_LIB_INLINE sx_int sx_str_cmp(const char* str1, const char* str2) { return str1 && str2 ? strcmp(str1, str2) : (str1 ? 1 : (str2 ? -1 : 0)); }
 SEGAN_LIB_INLINE const char* sx_str_str(const char* str, const char* what) { return str && what ? strstr(str, what) : null; }
-SEGAN_LIB_INLINE sint sx_str_copy(char* dest, const sint dest_size_in_byte, const char* src) { return strcpy_s(dest, dest_size_in_byte, src); }
+SEGAN_LIB_INLINE sx_int sx_str_copy(char* dest, const sx_int dest_size_in_byte, const char* src) { return strcpy_s(dest, dest_size_in_byte, src); }
 
-SEGAN_LIB_INLINE sint sx_str_split_count(const char* str, const char* split)
+SEGAN_LIB_INLINE sx_int sx_str_split_count(const char* str, const char* split)
 {
     if (!str || !split) return 0;
-    sint res = 1;
+    sx_int res = 1;
     for (const char* f = strstr(str, split); f != null; f = strstr(++f, split))
         res++;
     return res;
 }
 
-SEGAN_LIB_INLINE sint sx_str_split(char* dest, const uint destsize, const char* str, const char* split, const uint index)
+SEGAN_LIB_INLINE sx_int sx_str_split(char* dest, const sx_uint destsize, const char* str, const char* split, const sx_uint index)
 {
     if (!str || !split) return 0;
 
-    uint splitlen = sx_str_len(split);
+    sx_uint splitlen = sx_str_len(split);
     const char *start = str, *end = strstr(str, split);
-    for (uint i = 0; i < index && end != null; ++i)
+    for (sx_uint i = 0; i < index && end != null; ++i)
     {
         start = end + splitlen;
         end = strstr(++end, split);
@@ -37,33 +37,33 @@ SEGAN_LIB_INLINE sint sx_str_split(char* dest, const uint destsize, const char* 
 
     if (start)
     {
-        int res = _snprintf_s(dest, destsize, _TRUNCATE, "%.*s", (uint)(end - start), start);
+        int res = sx_snprintf(dest, destsize, "%.*s", (sx_uint)(end - start), start);
         return res < 0 ? destsize - 1 : res;
     }
     else return 0;
 }
 
 
-SEGAN_LIB_INLINE sint sx_str_to_int(const char* str, const sint defaul_val /*= 0 */)
+SEGAN_LIB_INLINE sx_int sx_str_to_int(const char* str, const sx_int defaul_val /*= 0 */)
 {
     if (!str) return defaul_val;
-    sint res = defaul_val;
+    sx_int res = defaul_val;
     sscanf_s(str, "%d", &res);
     return res;
 }
 
-SEGAN_LIB_INLINE uint sx_str_to_uint(const char* str, const uint defaul_val /*= 0 */)
+SEGAN_LIB_INLINE sx_uint sx_str_to_uint(const char* str, const sx_uint defaul_val /*= 0 */)
 {
     if (!str) return defaul_val;
-    uint res = defaul_val;
+    sx_uint res = defaul_val;
     sscanf_s(str, "%u", &res);
     return res;
 }
 
-SEGAN_LIB_INLINE uint64 sx_str_to_uint64(const char* str, const uint64 defaul_val /*= 0 */)
+SEGAN_LIB_INLINE sx_uint64 sx_str_to_uint64(const char* str, const sx_uint64 defaul_val /*= 0 */)
 {
     if (!str) return defaul_val;
-    uint64 res = defaul_val;
+    sx_uint64 res = defaul_val;
     sscanf_s(str, "%llu", &res);
     return res;
 }
@@ -78,9 +78,9 @@ SEGAN_LIB_INLINE const char* sx_str_get_filename(const char* filename)
 }
 
 
-SEGAN_LIB_INLINE uint sx_wchar_to_utf8(char* dest, const uint destsize, const short ch)
+SEGAN_LIB_INLINE sx_uint sx_wchar_to_utf8(char* dest, const sx_uint destsize, const short ch)
 {//	code from : http://www.opensource.apple.com/source/OpenLDAP/OpenLDAP-186/OpenLDAP/libraries/libldap/utf-8-conv.c
-    uint len = 0;
+    sx_uint len = 0;
     if (!dest || !destsize)   /* just determine the required UTF-8 char length. */
     {
         if (ch < 0)         return 0;
@@ -158,7 +158,7 @@ SEGAN_LIB_INLINE uint sx_wchar_to_utf8(char* dest, const uint destsize, const sh
     return len;
 }
 
-SEGAN_LIB_INLINE uint sx_str_to_utf8(char* dest, const uint destsize, const wchar* src)
+SEGAN_LIB_INLINE sx_uint sx_str_to_utf8(char* dest, const sx_uint destsize, const sx_wchar* src)
 {
     int r = 0;
     char tmp[32];
@@ -177,7 +177,7 @@ SEGAN_LIB_INLINE uint sx_str_to_utf8(char* dest, const uint destsize, const wcha
         }
     }
     *d = 0;
-    return (uint)(d - dest);
+    return (sx_uint)(d - dest);
 }
 
 
@@ -202,38 +202,38 @@ const char ldap_utf8_mintab[] = {
     (char)0x38, (char)0x80, (char)0x80, (char)0x80, (char)0x3c, (char)0x80, (char)0x00, (char)0x00 };
 
 /* LDAP_MAX_UTF8_LEN is 3 or 6 depending on size of wchar_t */
-#define LDAP_MAX_UTF8_LEN		 ( sizeof(wchar) * 3/2 )
+#define LDAP_MAX_UTF8_LEN		 ( sizeof(sx_wchar) * 3/2 )
 #define LDAP_UTF8_ISASCII(p)	 ( !(*(const unsigned char *)(p) & 0x80 ) )
 #define LDAP_UTF8_CHARLEN(p)	 ( LDAP_UTF8_ISASCII(p) ? 1 : ldap_utf8_lentab[*(const unsigned char *)(p) ^ 0x80] )
 #define LDAP_UTF8_CHARLEN2(p, l) ( ( ( l = LDAP_UTF8_CHARLEN( p )) < 3 || ( ldap_utf8_mintab[*(const unsigned char *)(p) & 0x1f] & (p)[1] ) ) ? l : 0 )
 
-SEGAN_LIB_INLINE uint sx_utf8_to_wchar(wchar dest, const uint destwords, const char* src)
+SEGAN_LIB_INLINE sx_uint sx_utf8_to_wchar(sx_wchar dest, const sx_uint destwords, const char* src)
 {
     if (!src) return 0;
 
-    /* Get UTF-8 sequence length from 1st byte */
-    sint utflen = LDAP_UTF8_CHARLEN2(src, utflen);
+    /* Get UTF-8 sequence length from 1st sx_byte */
+    sx_int utflen = LDAP_UTF8_CHARLEN2(src, utflen);
 
     if (utflen == 0 || utflen > (int)LDAP_MAX_UTF8_LEN) return 0;
 
-    /* First byte minus length tag */
+    /* First sx_byte minus length tag */
     unsigned char mask[] = { 0, 0x7f, 0x1f, 0x0f, 0x07, 0x03, 0x01 };
-    wchar ch = (wchar)(src[0] & mask[utflen]);
+    sx_wchar ch = (sx_wchar)(src[0] & mask[utflen]);
 
-    for (sint i = 1; i < utflen; ++i)
+    for (sx_int i = 1; i < utflen; ++i)
     {
         /* Subsequent bytes must start with 10 */
         if ((src[i] & 0xc0) != 0x80) return 0;
 
-        ch <<= 6;			/* 6 bits of data in each subsequent byte */
-        ch |= (wchar)(src[i] & 0x3f);
+        ch <<= 6;			/* 6 bits of data in each subsequent sx_byte */
+        ch |= (sx_wchar)(src[i] & 0x3f);
     }
 
     dest = ch;
     return utflen;
 }
 
-SEGAN_LIB_INLINE uint sx_utf8_to_str(wchar* dest, const uint destwords, const char* src)
+SEGAN_LIB_INLINE sx_uint sx_utf8_to_str(sx_wchar* dest, const sx_uint destwords, const char* src)
 {
     /* If input ptr is NULL or empty... */
     if (!src || !*src)
@@ -243,25 +243,25 @@ SEGAN_LIB_INLINE uint sx_utf8_to_str(wchar* dest, const uint destwords, const ch
     }
 
     /* Examine next UTF-8 character.  If output buffer is NULL, ignore count */
-    uint wclen = 0;
+    sx_uint wclen = 0;
     while (*src && (!dest || wclen < destwords))
     {
-        /* Get UTF-8 sequence length from 1st byte */
-        sint utflen = LDAP_UTF8_CHARLEN2(src, utflen);
+        /* Get UTF-8 sequence length from 1st sx_byte */
+        sx_int utflen = LDAP_UTF8_CHARLEN2(src, utflen);
 
-        if (!utflen || utflen >(sint)LDAP_MAX_UTF8_LEN) return 0;
+        if (!utflen || utflen >(sx_int)LDAP_MAX_UTF8_LEN) return 0;
 
-        /* First byte minus length tag */
+        /* First sx_byte minus length tag */
         unsigned char mask[] = { 0, 0x7f, 0x1f, 0x0f, 0x07, 0x03, 0x01 };
-        wchar ch = (wchar)(src[0] & mask[utflen]);
+        sx_wchar ch = (sx_wchar)(src[0] & mask[utflen]);
 
-        for (sint i = 1; i < utflen; ++i)
+        for (sx_int i = 1; i < utflen; ++i)
         {
             /* Subsequent bytes must start with 10 */
             if ((src[i] & 0xc0) != 0x80) return 0;
 
-            ch <<= 6;			/* 6 bits of data in each subsequent byte */
-            ch |= (wchar)(src[i] & 0x3f);
+            ch <<= 6;			/* 6 bits of data in each subsequent sx_byte */
+            ch |= (sx_wchar)(src[i] & 0x3f);
         }
 
         if (dest) dest[wclen] = ch;

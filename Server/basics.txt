@@ -1,10 +1,10 @@
 BASICS:
 
 Player address/validation
-4	token	: uint
+4	token	: sx_uint
 2	id		: short
 2 	room	: short
-1	index	: sbyte
+1	index	: sx_sbyte
 
 ____________________________
 

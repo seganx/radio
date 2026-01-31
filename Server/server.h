@@ -33,48 +33,48 @@
 typedef struct Player
 {
     char    device[DEVICE_LEN];
-    byte    from[ADDRESS_LEN];
-    uint    token;
+    sx_byte    from[ADDRESS_LEN];
+    sx_uint    token;
     short   id;
     short   room;
-    sbyte   index;
-    byte    flag;
-    ulong   active_time;
+    sx_sbyte   index;
+    sx_byte    flag;
+    sx_ulong   active_time;
 }
 Player;
 
 typedef struct Lobby
 {
-    uint    count;
+    sx_uint    count;
     Player  players[LOBBY_CAPACITY];
 }
 Lobby;
 
 typedef struct Room
 {
-    byte    capacity;
-    sbyte   count;
-    ulong   open_time;
-    ulong   join_timeout;
-    byte    properties[ROOM_PROP_LEN];
-    sint    matchmaking[ROOM_PARAMS];
+    sx_byte    capacity;
+    sx_sbyte   count;
+    sx_ulong   open_time;
+    sx_ulong   join_timeout;
+    sx_byte    properties[ROOM_PROP_LEN];
+    sx_int    matchmaking[ROOM_PARAMS];
     Player* players[ROOM_CAPACITY];
 }
 Room;
 
 typedef struct Config
 {
-    ushort  port;
-    uint    player_timeout;
-    uint    player_master_timeout;
+    sx_ushort  port;
+    sx_uint    player_timeout;
+    sx_uint    player_master_timeout;
 } 
 Config;
 
 typedef struct Server
 {
     Config  config;
-    uint    socket;
-    uint    token;
+    sx_uint    socket;
+    sx_uint    token;
     Lobby   lobby;
     Room    rooms[ROOM_COUNT];
 
@@ -85,156 +85,156 @@ Server;
 #pragma pack(push,1)
 typedef struct Ping
 {
-    byte    type;
-    uint    token;
+    sx_byte    type;
+    sx_uint    token;
     short   id;
     short   room;
-    sbyte   index;
-    ulong   time;
+    sx_sbyte   index;
+    sx_ulong   time;
 }
 Ping;
 
 typedef struct PingResponse
 {
-    byte    type;
-    sbyte   error;
-    ulong   time;
-    ulong   now;
-    byte    flag;
+    sx_byte    type;
+    sx_sbyte   error;
+    sx_ulong   time;
+    sx_ulong   now;
+    sx_byte    flag;
 }
 PingResponse;
 
 typedef struct Login
 {
-    byte    type;
+    sx_byte    type;
     char    device[DEVICE_LEN];
-    uint    checksum;
+    sx_uint    checksum;
 }
 Login;
 
 typedef struct LoginResponse
 {
-    byte    type;
-    sbyte   error;
-    uint    token;
+    sx_byte    type;
+    sx_sbyte   error;
+    sx_uint    token;
     short   id;
     short   room;
-    sbyte   index;
-    uint    checksum;
+    sx_sbyte   index;
+    sx_uint    checksum;
 }
 LoginResponse;
 
 typedef struct Logout
 {
-    byte    type;
-    uint    token;
+    sx_byte    type;
+    sx_uint    token;
     short   id;
     short   room;
-    sbyte   index;
-    uint    checksum;
+    sx_sbyte   index;
+    sx_uint    checksum;
 }
 Logout;
 
 typedef struct Create
 {
-    byte    type;
-    uint    token;
+    sx_byte    type;
+    sx_uint    token;
     short   id;
-    byte    capacity;
-    byte    join_timeout;
-    byte    properties[ROOM_PROP_LEN];
-    sint    matchmaking[ROOM_PARAMS];
+    sx_byte    capacity;
+    sx_byte    join_timeout;
+    sx_byte    properties[ROOM_PROP_LEN];
+    sx_int    matchmaking[ROOM_PARAMS];
 }
 Create;
 
 typedef struct CreateResponse
 {
-    byte    type;
-    sbyte   error;
+    sx_byte    type;
+    sx_sbyte   error;
     short   room;
-    sbyte   index;
-    byte    flag;
+    sx_sbyte   index;
+    sx_byte    flag;
 }
 CreateResponse;
 
 typedef struct Join
 {
-    byte    type;
-    uint    token;
+    sx_byte    type;
+    sx_uint    token;
     short   id;
-    sint    matchmaking[ROOM_PARAMS * 2];
+    sx_int    matchmaking[ROOM_PARAMS * 2];
 }
 Join;
 
 typedef struct JoinResponse
 {
-    byte    type;
-    sbyte   error;
+    sx_byte    type;
+    sx_sbyte   error;
     short   room;
-    sbyte   index;
-    byte    flag;
-    byte    properties[ROOM_PROP_LEN];
+    sx_sbyte   index;
+    sx_byte    flag;
+    sx_byte    properties[ROOM_PROP_LEN];
 }
 JoinResponse;
 
 typedef struct Leave
 {
-    byte    type;
-    uint    token;
+    sx_byte    type;
+    sx_uint    token;
     short   id;
     short   room;
-    sbyte   index;
+    sx_sbyte   index;
 }
 Leave;
 
 typedef struct LeaveResponse
 {
-    byte    type;
-    sbyte   error;
+    sx_byte    type;
+    sx_sbyte   error;
 }
 LeaveResponse;
 
 typedef struct PacketUnreliable
 {
-    byte    type;
-    uint    token;
+    sx_byte    type;
+    sx_uint    token;
     short   id;
     short   room;
-    sbyte   index;
-    sbyte   target;
-    byte    datasize;
+    sx_sbyte   index;
+    sx_sbyte   target;
+    sx_byte    datasize;
 }
 PacketUnreliable;
 
 typedef struct PacketReliable
 {
-    byte    type;
-    uint    token;
+    sx_byte    type;
+    sx_uint    token;
     short   id;
     short   room;
-    sbyte   index;
-    sbyte   target;
-    byte    ack;
-    byte    datasize;
+    sx_sbyte   index;
+    sx_sbyte   target;
+    sx_byte    ack;
+    sx_byte    datasize;
 }
 PacketReliable;
 
 typedef struct PacketRelied
 {
-    byte    type;
-    uint    token;
+    sx_byte    type;
+    sx_uint    token;
     short   id;
     short   room;
-    sbyte   index;
-    sbyte   target;
-    byte    ack;
+    sx_sbyte   index;
+    sx_sbyte   target;
+    sx_byte    ack;
 }
 PacketRelied;
 
 typedef struct ErrorResponse
 {
-    byte    type;
-    sbyte   error;
+    sx_byte    type;
+    sx_sbyte   error;
 }
 ErrorResponse;
 

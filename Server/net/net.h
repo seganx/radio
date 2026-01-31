@@ -12,31 +12,25 @@
 
 #include "../core/def.h"
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
 //! initialize network system
-SEGAN_LIB_API bool sx_net_initialize( void );
+SEGAN_LIB_API bool sx_net_initialize(void);
 
 //! finalize network system
-SEGAN_LIB_API void sx_net_finalize( void );
+SEGAN_LIB_API void sx_net_finalize(void);
 
-//!	additional functions
-SEGAN_LIB_API char* sx_net_error_string( const sint code );
+//! legacy: return a short name for an explicit error code
+SEGAN_LIB_API char* sx_net_error_string(const sx_int code);
 
-#if 0
-//! simple function to compute checksum
-word sx_net_compute_checksum( const void* buffer, const uint size );
+//! unified: get last platform error code (WSAGetLastError / errno)
+SEGAN_LIB_API sx_int sx_net_last_error_code(void);
 
-//! return true if the packet is a valid message
-bool sx_net_verify_packet( const void* buffer, const uint size );
-#endif
-
+//! unified: get string for last error (code==0) or a given code
+SEGAN_LIB_API const char* sx_net_last_error_string(sx_int code);
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-
-

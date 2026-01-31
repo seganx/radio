@@ -12,7 +12,7 @@
 #ifndef DEFINED_Json
 #define DEFINED_Json
 
-#include "Def.h"
+#include "def.h"
 
 typedef enum json_type
 {
@@ -49,9 +49,9 @@ sx_json_node;
 typedef struct sx_json
 {
     const char*             text;           //! JSON string
-    uint                    pos;            //! offset in the JSON string
-    uint                    toknext;        //! next token to allocate
-    uint                    toksuper;       //! superior token node, e.g parent object or array
+    sx_uint                    pos;            //! offset in the JSON string
+    sx_uint                    toknext;        //! next token to allocate
+    sx_uint                    toksuper;       //! superior token node, e.g parent object or array
     int                     nodescount;     //! number of nodes
     struct sx_json_node*    nodes;          //! array of node
     struct sx_json_node     tmp;            //! temp node used in return values
@@ -65,7 +65,7 @@ extern "C" {
 
 
 //! compute number of nodes needed to parse data
-SEGAN_LIB_API uint sx_json_node_count(sx_json* obj, const char* jsondata, const int jsonlen);
+SEGAN_LIB_API sx_uint sx_json_node_count(sx_json* obj, const char* jsondata, const int jsonlen);
 
 /*! 
 parses a JSON data string and return a pointer to the root

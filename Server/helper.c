@@ -7,15 +7,15 @@
 #include "helper.h"
 
 
-uint checksum_compute(const byte* buffer, const uint len)
+sx_uint checksum_compute(const sx_byte* buffer, const sx_uint len)
 {
-    uint checksum = 0;
-    for (uint i = 0; i < len; i++)
-        checksum += 64548 + (uint)buffer[i] * 6597;
+    sx_uint checksum = 0;
+    for (sx_uint i = 0; i < len; i++)
+        checksum += 64548 + (sx_uint)buffer[i] * 6597;
     return checksum;
 }
 
-bool checksum_is_invalid(const byte* buffer, const uint len, const uint checksum)
+bool checksum_is_invalid(const sx_byte* buffer, const sx_uint len, const sx_uint checksum)
 {
     return checksum != checksum_compute(buffer, len);
 }
@@ -30,7 +30,7 @@ inline bool validate_player_room_id_range(const short roomid)
     return 0 <= roomid && roomid < ROOM_COUNT;
 }
 
-inline bool validate_player_index_range(const sbyte index)
+inline bool validate_player_index_range(const sx_sbyte index)
 {
     return 0 <= index && index < ROOM_CAPACITY;
 }
@@ -59,14 +59,14 @@ inline bool is_player_not_joined_room(const Player* player)
 /////////////////////////////////////////////////////////////////////////////
 //  LOBBY 
 /////////////////////////////////////////////////////////////////////////////
-Player* lobby_get_player_validate_token(Server* server, const uint token, const short id)
+Player* lobby_get_player_validate_token(Server* server, const sx_uint token, const short id)
 {
     if (token > 0 && validate_player_id_range(id) == false) return null;
     Player* player = &server->lobby.players[id];
     return (player->token == token) ? player : null;
 }
 
-Player* lobby_get_player_validate_all(Server* server, const uint token, const short id, const short room, const sbyte index)
+Player* lobby_get_player_validate_all(Server* server, const sx_uint token, const short id, const short room, const sx_sbyte index)
 {
     if (token > 0 && validate_player_id_range(id) == false) return null;
     Player* player = &server->lobby.players[id];
@@ -84,7 +84,7 @@ Player* lobby_find_player_by_device(Server* server, const char* device)
     return null;
 }
 
-Player* lobby_add_player(Server* server, const char* device, const byte* from, const uint token)
+Player* lobby_add_player(Server* server, const char* device, const sx_byte* from, const sx_uint token)
 {
     for (short i = 0; i < LOBBY_CAPACITY; i++)
     {
@@ -142,7 +142,7 @@ int room_find_free(Server* server)
     return -1;
 }
 
-bool room_is_open(const Room* room, const ulong now)
+bool room_is_open(const Room* room, const sx_ulong now)
 {
     if (room->open_time == 0) return false;  // this means that the room is never openned!
     if (room->join_timeout == 0) return true;
@@ -152,7 +152,7 @@ bool room_is_open(const Room* room, const ulong now)
 bool room_is_match(Room* room, int* params)
 {
     bool result = true;
-    for (byte i = 0; i < ROOM_PARAMS && result; i++)
+    for (sx_byte i = 0; i < ROOM_PARAMS && result; i++)
     {
         int room_param = room->matchmaking[i];
         int param_low = params[i * 2];
@@ -162,7 +162,7 @@ bool room_is_match(Room* room, int* params)
     return result;
 }
 
-bool room_create(Server* server, Player* player, byte capacity, ulong timeout, byte* properties, sint* matchmaking)
+bool room_create(Server* server, Player* player, sx_byte capacity, sx_ulong timeout, sx_byte* properties, sx_int* matchmaking)
 {
     int roomid = room_find_empty(server);
     if (roomid < 0) return false;
@@ -171,13 +171,13 @@ bool room_create(Server* server, Player* player, byte capacity, ulong timeout, b
     room->join_timeout = timeout;
     room->open_time = sx_time_now();
     sx_mem_copy(room->properties, properties, ROOM_PROP_LEN);
-    sx_mem_copy(room->matchmaking, matchmaking, ROOM_PARAMS * sizeof(sint));
+    sx_mem_copy(room->matchmaking, matchmaking, ROOM_PARAMS * sizeof(sx_int));
     return room_add_player(server, player, roomid);
 }
 
-bool room_join(Server* server, Player* player, int* params)
+bool room_join(Server* server, Player* player, sx_int* params)
 {
-    ulong now = sx_time_now();
+    sx_ulong now = sx_time_now();
     for (short roomid = 0; roomid < ROOM_COUNT; roomid++)
     {
         Room* room = &server->rooms[roomid];
@@ -194,7 +194,7 @@ bool room_add_player(Server* server, Player* player, const short roomid)
     if (is_player_joined_room(player)) return true;
 
     Room* room = &server->rooms[roomid];
-    for (byte i = 0; i < ROOM_CAPACITY; i++)
+    for (sx_byte i = 0; i < ROOM_CAPACITY; i++)
     {
         if (room->players[i] == null)
         {
@@ -224,7 +224,7 @@ void room_remove_player(Server* server, Player* player)
     player->flag = 0;
 }
 
-void room_check_master(Server* server, ulong now, const short roomid)
+void room_check_master(Server* server, sx_ulong now, const short roomid)
 {
     Room* room = &server->rooms[roomid];
     if (room->count < 1) return;
@@ -233,7 +233,7 @@ void room_check_master(Server* server, ulong now, const short roomid)
 
     // find the current master
     Player* current_master = null;
-    for (uint p = 0; p < ROOM_CAPACITY; p++)
+    for (sx_uint p = 0; p < ROOM_CAPACITY; p++)
     {
         Player* player = room->players[p];
         if (player == null || player->token < 1) continue;
@@ -253,7 +253,7 @@ void room_check_master(Server* server, ulong now, const short roomid)
         sx_flag_rem(current_master->flag, FLAG_MASTER);
 
     // find new master 
-    for (uint p = 0; p < ROOM_CAPACITY; p++)
+    for (sx_uint p = 0; p < ROOM_CAPACITY; p++)
     {
         Player* player = room->players[p];
         if (player == null || player->token < 1) continue;
@@ -273,7 +273,7 @@ void room_report(Server* server, int roomid)
 
     Room* room = &server->rooms[roomid];
     sx_print("Room[%d] -> %d players", roomid, room->count);
-    for (uint p = 0; p < ROOM_CAPACITY; p++)
+    for (sx_uint p = 0; p < ROOM_CAPACITY; p++)
     {
         Player* player = room->players[p];
         if (player == null || player->token < 1) continue;

@@ -41,7 +41,7 @@ SEGAN_LIB_API void trace_assert(const char* expression, const char* file, const 
 extern "C" {
 #endif // __cplusplus
 
-SEGAN_LIB_API void trace_attach( uint stack_level, const char* filename );
+SEGAN_LIB_API void trace_attach( sx_uint stack_level, const char* filename );
 SEGAN_LIB_API void trace_detach( void );
 
 #if __cplusplus
@@ -96,9 +96,9 @@ SEGAN_LIB_API void trace_pop(void);
 extern "C" {
 #endif // __cplusplus
 
-SEGAN_LIB_API void* trace_mem_alloc(const uint size_in_byte, const char* file, const int line);
-SEGAN_LIB_API void* trace_mem_calloc(const uint size_in_byte, const char* file, const int line);
-SEGAN_LIB_API void* trace_mem_realloc(void* p, const uint new_size_in_byte, const char* file, const int line);
+SEGAN_LIB_API void* trace_mem_alloc(const sx_uint size_in_byte, const char* file, const int line);
+SEGAN_LIB_API void* trace_mem_calloc(const sx_uint size_in_byte, const char* file, const int line);
+SEGAN_LIB_API void* trace_mem_realloc(void* p, const sx_uint new_size_in_byte, const char* file, const int line);
 SEGAN_LIB_API void* trace_mem_free(const void* p);
 
 #ifdef __cplusplus
@@ -118,7 +118,7 @@ SEGAN_INLINE void   operator delete(void *p) { trace_mem_free(p); }
 
 #ifdef __cplusplus
 #define sx_new      new
-SEGAN_INLINE void*  operator new (uint size) { return mem_alloc(size); }
+SEGAN_INLINE void*  operator new (sx_uint size) { return mem_alloc(size); }
 SEGAN_INLINE void   operator delete (void *p) { mem_free(p); }
 #endif // __cplusplus
 

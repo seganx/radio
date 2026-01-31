@@ -4,7 +4,7 @@
 	Author:		Sajad Beigjani
 	eMail:		sajad.b@gmail.com
 	Site:		www.SeganX.com
-	Desc:		This file contain a simple class and functions to handle times
+	Desc:		This file contain a simple class and functions to sx_handle times
 *********************************************************************/
 #ifndef DEFINED_TIME
 #define DEFINED_TIME
@@ -15,9 +15,9 @@
 extern "C" {
 #endif // __cplusplus
 
-SEGAN_LIB_API ulong sx_time_now();
-SEGAN_LIB_API ulong sx_time_diff(const ulong t1, const ulong t2);
-SEGAN_LIB_API void sx_time_print(char* dest, const uint destsize, const ulong timeval);
+SEGAN_LIB_API sx_ulong sx_time_now();
+SEGAN_LIB_API sx_ulong sx_time_diff(const sx_ulong t1, const sx_ulong t2);
+SEGAN_LIB_API void sx_time_print(char* dest, const sx_uint destsize, const sx_ulong timeval);
 
 
 #ifdef __cplusplus

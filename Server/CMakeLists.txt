@@ -1,16 +1,25 @@
-﻿# CMakeList.txt : CMake project for server, include source and define
-# project specific logic here.
-#
+﻿cmake_minimum_required(VERSION 3.16)
+project(myserver C)
 
-cmake_minimum_required(VERSION 3.8)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
-project(server)
+file(GLOB CORE_SRC CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/core/*.c")
+file(GLOB NET_SRC  CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/net/*.c")
 
-file(GLOB server_files 
-	"*.c"
-	"core/*.c"
-	"net/*.c"
-	)
+add_executable(server
+  server.c
+  helper.c
+  ${CORE_SRC}
+  ${NET_SRC}
+)
 
-add_executable(server ${server_files})
+target_include_directories(server PRIVATE
+  ${CMAKE_SOURCE_DIR}
+  ${CMAKE_SOURCE_DIR}/core
+  ${CMAKE_SOURCE_DIR}/net
+)
+
+find_package(Threads REQUIRED)
+target_link_libraries(server PRIVATE Threads::Threads)
 

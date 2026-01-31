@@ -43,7 +43,7 @@ static void jsmn_fill_token(sx_json_node *token, json_type type, int start, int 
 }
 
 /*! Fills next available token with JSON primitive. */
-static int jsmn_parse_primitive(sx_json *parser, const char *js, uint len, sx_json_node *tokens, uint num_tokens)
+static int jsmn_parse_primitive(sx_json *parser, const char *js, sx_uint len, sx_json_node *tokens, sx_uint num_tokens)
 {
 	int start = parser->pos;
 
@@ -84,7 +84,7 @@ found:
 }
 
 /*! Fills next token with JSON string. */
-static int jsmn_parse_string(sx_json *parser, const char *js, uint len, sx_json_node *tokens, uint num_tokens)
+static int jsmn_parse_string(sx_json *parser, const char *js, sx_uint len, sx_json_node *tokens, sx_uint num_tokens)
 {
 	int start = parser->pos;
 	parser->pos++;
@@ -154,7 +154,7 @@ static int jsmn_parse_string(sx_json *parser, const char *js, uint len, sx_json_
 }
 
 /*! Parse JSON string and fill tokens. */
-static int jsmn_parse(sx_json *parser, const char *js, uint len, sx_json_node *tokens, uint num_tokens)
+static int jsmn_parse(sx_json *parser, const char *js, sx_uint len, sx_json_node *tokens, sx_uint num_tokens)
 {
 	int count = parser->toknext;
 
@@ -172,7 +172,7 @@ static int jsmn_parse(sx_json *parser, const char *js, uint len, sx_json_node *t
 				sx_json_node *token = jsmn_alloc_token(parser, tokens, num_tokens);
 				if (token == null)
 					return ERROR_NOMEM;
-				if (parser->toksuper != (uint)-1)
+				if (parser->toksuper != (sx_uint)-1)
 				{
 					tokens[parser->toksuper].childs++;
 					token->parent = parser->toksuper;
@@ -217,7 +217,7 @@ static int jsmn_parse(sx_json *parser, const char *js, uint len, sx_json_node *t
 				int r = jsmn_parse_string(parser, js, len, tokens, num_tokens);
 				if (r < 0) return r;
 				count++;
-				if (parser->toksuper != (uint)-1 && tokens != null)
+				if (parser->toksuper != (sx_uint)-1 && tokens != null)
 					tokens[parser->toksuper].childs++;
 			}
 			break;
@@ -225,7 +225,7 @@ static int jsmn_parse(sx_json *parser, const char *js, uint len, sx_json_node *t
 			case '\t': case '\r': case '\n': case ' ': break;
 			case ':': parser->toksuper = parser->toknext - 1; break;
 			case ',':
-				if (tokens != null && parser->toksuper != (uint)-1 && tokens[parser->toksuper].type != ARRAY && tokens[parser->toksuper].type != OBJECT)
+				if (tokens != null && parser->toksuper != (sx_uint)-1 && tokens[parser->toksuper].type != ARRAY && tokens[parser->toksuper].type != OBJECT)
 					parser->toksuper = tokens[parser->toksuper].parent;
 				break;
 
@@ -234,7 +234,7 @@ static int jsmn_parse(sx_json *parser, const char *js, uint len, sx_json_node *t
 				int r = jsmn_parse_primitive(parser, js, len, tokens, num_tokens);
 				if (r < 0) return r;
 				count++;
-				if (parser->toksuper != (uint)-1 && tokens != null)
+				if (parser->toksuper != (sx_uint)-1 && tokens != null)
 					tokens[parser->toksuper].childs++;
 			}
 			break;
@@ -291,7 +291,7 @@ static void jsmn_print(const char* js, sx_json_node* root, int level, bool right
 //////////////////////////////////////////////////////////////////////////
 //	JSON class implementation
 //////////////////////////////////////////////////////////////////////////
-SEGAN_LIB_API uint sx_json_node_count(sx_json* obj, const char* jsondata, const int jsonlen)
+SEGAN_LIB_API sx_uint sx_json_node_count(sx_json* obj, const char* jsondata, const int jsonlen)
 {
     if (!jsondata) return 0;
 
@@ -344,7 +344,7 @@ SEGAN_LIB_API sx_json_node* sx_json_find(sx_json* obj, const char* name)
 
 SEGAN_LIB_API int sx_json_read_value(sx_json_node* node, char* dest, const int dest_size)
 {
-    int res = _snprintf_s(dest, dest_size, _TRUNCATE, "%.*s", (node->down->end - node->down->start), (node->text + node->down->start));
+    int res = sx_snprintf(dest, dest_size, "%.*s", (node->down->end - node->down->start), (node->text + node->down->start));
     return res < 0 ? dest_size - 1 : res;
 }
 

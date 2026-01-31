@@ -11,29 +11,42 @@
                 behavior
 
 *********************************************************************/
+/********************************************************************
+    created:    2012/04/11
+    filename:   Socket.h
+    Author:     Sajad Beigjani
+    Desc:       Basic part of network system (UDP sockets)
+*********************************************************************/
 #pragma once
 
 #include "net.h"
 
-
 #ifdef __cplusplus
 extern "C" {
-#endif // __cplusplus
+#endif
 
-//! open a UPD socket and bind it to the specified port
-SEGAN_LIB_API uint sx_socket_open(const ushort port, const bool bind, const bool broadcast);
+typedef uintptr_t   sx_socket_t;
+struct sockaddr;
+
+//! portable invalid socket value (matches INVALID_SOCKET on Windows and -1 on POSIX)
+ #define SX_INVALID_SOCKET ((sx_socket_t)(-1))
+
+//! open a UDP socket and optionally bind it to the specified port
+//! (legacy behavior: blocking by default)
+SEGAN_LIB_API sx_socket_t sx_socket_open(const sx_ushort port, const bool bind, const bool broadcast);
+
+//! open with extra options (new)
+SEGAN_LIB_API sx_socket_t sx_socket_open_ex(const sx_ushort port, const bool bind, const bool broadcast, const bool nonblocking);
 
 //! close opened socket
-SEGAN_LIB_API void sx_socket_close(uint socket);
+SEGAN_LIB_API void sx_socket_close(sx_socket_t socket);
 
 //! send data to the destination address
-SEGAN_LIB_API bool sx_socket_send(uint socket, const uint ip, const ushort port, const void* buffer, const int size);
+SEGAN_LIB_API bool sx_socket_send_in(sx_socket_t socket, const struct sockaddr* address, const void* buffer, const int size);
 
-SEGAN_LIB_API bool sx_socket_send_in(uint socket, const struct sockaddr* address, const void* buffer, const int size);
-
-//! pick up data on the port and fill out address of sender
-SEGAN_LIB_API sint sx_socket_receive( uint socket, void* buffer, const int size, struct sockaddr* from );
+//! receive data and fill out address of sender
+SEGAN_LIB_API sx_int sx_socket_receive(sx_socket_t socket, void* buffer, const int size, struct sockaddr* from);
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif

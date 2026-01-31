@@ -11,10 +11,7 @@ Desc:		This file contains some basic wrapper functions that are
 #define HEADER_PLATFORM
 
 //! includes
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stddef.h>
+#include "def.h"
 
 #ifndef SEGAN_LIB_API
 #define SEGAN_LIB_API
@@ -23,8 +20,8 @@ Desc:		This file contains some basic wrapper functions that are
 //////////////////////////////////////////////////////////////////////////
 //	basic types
 //////////////////////////////////////////////////////////////////////////
-#ifndef uint
-typedef unsigned long	uint;
+#ifndef sx_uint
+//typedef unsigned long	sx_uint;
 #endif
 
 struct sx_mutex;
@@ -97,25 +94,29 @@ SEGAN_LIB_API int sx_cond_wait(struct sx_cond * cond, struct sx_mutex * mutex);
 SEGAN_LIB_API int sx_cond_signal(struct sx_cond * cond);
 SEGAN_LIB_API int sx_cond_broadcast(struct sx_cond * cond);
 
-SEGAN_LIB_API struct sx_semaphore * sx_semaphore_create(const uint init_count, const uint max_count);
+SEGAN_LIB_API struct sx_semaphore * sx_semaphore_create(const sx_uint init_count, const sx_uint max_count);
 SEGAN_LIB_API int sx_semaphore_destroy(struct sx_semaphore * semaphore);
 SEGAN_LIB_API int sx_semaphore_wait(struct sx_semaphore * semaphore);
 SEGAN_LIB_API int sx_semaphore_post(struct sx_semaphore * semaphore);
 SEGAN_LIB_API int sx_semaphore_getval(struct sx_semaphore * semaphore);
 
-SEGAN_LIB_API struct sx_thread * sx_thread_create(const uint id, sx_thread_func func, void * param);
+SEGAN_LIB_API struct sx_thread * sx_thread_create(const sx_uint id, sx_thread_func func, void * param);
 SEGAN_LIB_API int sx_thread_destroy(struct sx_thread * thread);
-SEGAN_LIB_API uint sx_thread_id(struct sx_thread * thread);
+SEGAN_LIB_API sx_uint sx_thread_id(struct sx_thread * thread);
 
-SEGAN_LIB_API struct sx_threadpool* sx_threadpool_create(const uint thread_count, const char* trace_filename);
+SEGAN_LIB_API struct sx_threadpool* sx_threadpool_create(const sx_uint thread_count, const char* trace_filename);
 SEGAN_LIB_API int sx_threadpool_destroy(struct sx_threadpool * threadpool);
 SEGAN_LIB_API int sx_threadpool_add_job(struct sx_threadpool * threadpool, sx_thread_func func, void * param);
-SEGAN_LIB_API uint sx_threadpool_num_jobs(struct sx_threadpool * threadpool);
-SEGAN_LIB_API uint sx_threadpool_num_busy_threads(struct sx_threadpool * threadpool);
+SEGAN_LIB_API sx_uint sx_threadpool_num_jobs(struct sx_threadpool * threadpool);
+SEGAN_LIB_API sx_uint sx_threadpool_num_busy_threads(struct sx_threadpool * threadpool);
 
 SEGAN_LIB_API unsigned long long sx_get_tick();
-SEGAN_LIB_API void sx_sleep(const uint miliseconds);
+SEGAN_LIB_API void sx_sleep(const sx_uint miliseconds);
 SEGAN_LIB_API char sx_getch();
+
+SEGAN_LIB_API sx_int sx_fopen(FILE** f, const char* path, const char* mode);
+SEGAN_LIB_API sx_int sx_scanf(const char* buffer, const char* format, ...);
+SEGAN_LIB_API size_t sx_fread(void* buffer, size_t bufferSize, size_t elementSize, size_t elementCount, FILE* stream);
 
 
 #ifdef __cplusplus

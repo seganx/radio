@@ -1,5 +1,8 @@
 ﻿// server.cpp : Defines the entry point for the application.
 //
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 
 #include "server.h"
 #include "helper.h"
@@ -11,13 +14,13 @@
 #include "core/timer.h"
 #include "core/platform.h"
 #include "core/Json.h"
-#include <windows.h>
+
 
 Server server = { 0 };
 
-uint server_get_token()
+sx_uint server_get_token()
 {
-    uint result;
+    sx_uint result;
     server.token++;
     if (server.token == 0) server.token++;
     result = server.token;
@@ -57,7 +60,7 @@ void server_cleanup(void)
 {
     sx_trace();
 
-    ulong now = sx_time_now();
+    sx_ulong now = sx_time_now();
     sx_mutex_lock(server.mutex);
 
     for (short i = 0; i < LOBBY_CAPACITY; i++)
@@ -78,7 +81,7 @@ void server_rooms_update()
 {
     sx_trace();
 
-    ulong now = sx_time_now();
+    sx_ulong now = sx_time_now();
     sx_mutex_lock(server.mutex);
     for (short i = 0; i < ROOM_COUNT; i++)
         room_check_master(&server, now, i);
@@ -87,18 +90,18 @@ void server_rooms_update()
     sx_return();
 }
 
-void server_send(const byte* address, const void* buffer, const int size)
+void server_send(const sx_byte* address, const void* buffer, const int size)
 {
     sx_socket_send_in(server.socket, (const struct sockaddr*)address, buffer, size);
 }
 
-void server_send_error(const byte* from, const byte type, const sbyte error)
+void server_send_error(const sx_byte* from, const sx_byte type, const sx_sbyte error)
 {
     ErrorResponse response = { type, error };
     server_send(from, &response, sizeof(ErrorResponse));
 }
 
-void server_ping(byte* buffer, const byte* from)
+void server_ping(sx_byte* buffer, const sx_byte* from)
 {
     sx_mutex_lock(server.mutex);
 
@@ -108,7 +111,7 @@ void server_ping(byte* buffer, const byte* from)
     PingResponse response;
     if (player != null)
     {
-        ulong now = sx_time_now();
+        sx_ulong now = sx_time_now();
         sx_mem_copy(player->from, from, ADDRESS_LEN);
         player->active_time = now;
         PingResponse temp = { TYPE_PING, 0, ping->time, now, player->flag };
@@ -123,7 +126,7 @@ void server_ping(byte* buffer, const byte* from)
         server_send_error(from, TYPE_PING, ERR_EXPIRED);
 }
 
-void server_process_login(byte* buffer, const byte* from)
+void server_process_login(sx_byte* buffer, const sx_byte* from)
 {
     sx_mutex_lock(server.mutex);
 
@@ -135,7 +138,7 @@ void server_process_login(byte* buffer, const byte* from)
     }
 
     Login* login = (Login*)buffer;
-    if (checksum_is_invalid(buffer, sizeof(Login) - sizeof(uint), login->checksum))
+    if (checksum_is_invalid(buffer, sizeof(Login) - sizeof(sx_uint), login->checksum))
     {
         sx_mutex_unlock(server.mutex);
         return;
@@ -156,11 +159,11 @@ void server_process_login(byte* buffer, const byte* from)
 
     sx_mutex_unlock(server.mutex);
 
-    response.checksum = checksum_compute((const byte*)&response, sizeof(LoginResponse) - sizeof(uint));
+    response.checksum = checksum_compute((const sx_byte*)&response, sizeof(LoginResponse) - sizeof(sx_uint));
     server_send(from, &response, sizeof(LoginResponse));
 }
 
-void server_process_logout(byte* buffer, const byte* from)
+void server_process_logout(sx_byte* buffer, const sx_byte* from)
 {
     sx_mutex_lock(server.mutex);
 
@@ -172,7 +175,7 @@ void server_process_logout(byte* buffer, const byte* from)
         return;
     }
 
-    if (checksum_is_invalid(buffer, sizeof(Logout) - sizeof(uint), logout->checksum))
+    if (checksum_is_invalid(buffer, sizeof(Logout) - sizeof(sx_uint), logout->checksum))
     {
         sx_mutex_unlock(server.mutex);
         return;
@@ -190,7 +193,7 @@ void server_process_logout(byte* buffer, const byte* from)
     server_send_error(from, TYPE_LOGOUT, 0);
 }
 
-void server_process_create(byte* buffer, const byte* from)
+void server_process_create(sx_byte* buffer, const sx_byte* from)
 {
     sx_mutex_lock(server.mutex);
 
@@ -223,7 +226,7 @@ void server_process_create(byte* buffer, const byte* from)
     server_send(from, &response, sizeof(CreateResponse));
 }
 
-void server_process_join(byte* buffer, const byte* from)
+void server_process_join(sx_byte* buffer, const sx_byte* from)
 {
     sx_mutex_lock(server.mutex);
 
@@ -257,7 +260,7 @@ void server_process_join(byte* buffer, const byte* from)
     server_send(from, &response, sizeof(JoinResponse));
 }
 
-void server_process_leave(byte* buffer, const byte* from)
+void server_process_leave(sx_byte* buffer, const sx_byte* from)
 {
     sx_mutex_lock(server.mutex);
 
@@ -273,7 +276,7 @@ void server_process_leave(byte* buffer, const byte* from)
 }
 
 
-void server_process_packet_unreliable(byte* buffer, const byte* from)
+void server_process_packet_unreliable(sx_byte* buffer, const sx_byte* from)
 {
     PacketUnreliable* packet = (PacketUnreliable*)buffer;
     if (validate_player_index_range(packet->index) == false) return;
@@ -295,7 +298,7 @@ void server_process_packet_unreliable(byte* buffer, const byte* from)
         buffer[0] = TYPE_PACKET_UNRELY;
         buffer[1] = sender;
         //buffer[2] = packet->datasize;  no need to rewrite data size
-        for (uint i = 0; i < ROOM_CAPACITY; i++)
+        for (sx_uint i = 0; i < ROOM_CAPACITY; i++)
         {
             if (i == sender) continue;
             Player* other = room->players[i];
@@ -311,7 +314,7 @@ void server_process_packet_unreliable(byte* buffer, const byte* from)
         buffer[0] = TYPE_PACKET_UNRELY;
         buffer[1] = sender;
         //buffer[2] = packet->datasize;  no need to rewrite data size
-        for (uint i = 0; i < ROOM_CAPACITY; i++)
+        for (sx_uint i = 0; i < ROOM_CAPACITY; i++)
         {
             Player* other = room->players[i];
             if (other != null && other->token > 0)
@@ -334,7 +337,7 @@ void server_process_packet_unreliable(byte* buffer, const byte* from)
     }
 }
 
-void server_process_packet_reliable(byte* buffer, const byte* from)
+void server_process_packet_reliable(sx_byte* buffer, const sx_byte* from)
 {
     PacketReliable* packet = (PacketReliable*)buffer;
     if (validate_player_index_range(packet->index) == false) return;
@@ -352,8 +355,8 @@ void server_process_packet_reliable(byte* buffer, const byte* from)
     Player* other = room->players[packet->target];
     if (other == null || other->token == 0)
     {
-        sbyte target = packet->target;
-        byte ack = packet->ack;
+        sx_sbyte target = packet->target;
+        sx_byte ack = packet->ack;
         // fake response to sender to stop trying
         buffer[0] = TYPE_PACKET_RELIED;
         buffer[1] = target;
@@ -362,8 +365,8 @@ void server_process_packet_reliable(byte* buffer, const byte* from)
     }
     else
     {
-        sbyte index = packet->index;
-        byte ack = packet->ack;
+        sx_sbyte index = packet->index;
+        sx_byte ack = packet->ack;
         int packetsize = packet->datasize + 4;
         buffer += sizeof(PacketReliable) - 4;
         buffer[0] = TYPE_PACKET_RELY;
@@ -374,7 +377,7 @@ void server_process_packet_reliable(byte* buffer, const byte* from)
     }
 }
 
-void server_process_packet_relied(byte* buffer, const byte* from)
+void server_process_packet_relied(sx_byte* buffer, const sx_byte* from)
 {
     PacketRelied* packet = (PacketRelied*)buffer;
     if (validate_player_index_range(packet->index) == false) return;
@@ -392,8 +395,8 @@ void server_process_packet_relied(byte* buffer, const byte* from)
     Player* other = room->players[packet->target];
     if (other != null && other->token > 0)
     {
-        sbyte index = packet->index;
-        byte ack = packet->ack;
+        sx_sbyte index = packet->index;
+        sx_byte ack = packet->ack;
         buffer[0] = TYPE_PACKET_RELIED;
         buffer[1] = index;
         buffer[2] = ack;
@@ -403,14 +406,14 @@ void server_process_packet_relied(byte* buffer, const byte* from)
 
 void server_report(void)
 {
-    sx_print("Total players connected: %d", server.lobby.count);
+    sx_print("Total players connected: %lu", server.lobby.count);
 
     int total_rooms = 0, total_players = 0;
-    for (uint r = 0; r < ROOM_COUNT; r++)
+    for (sx_uint r = 0; r < ROOM_COUNT; r++)
     {
         Room* room = &server.rooms[r];
         if (room->count < 1) continue;
-        sx_print("Room[%d, %04d, %04d, %04d, %04d] -> %d players", r, room->matchmaking[0], room->matchmaking[1], room->matchmaking[2], room->matchmaking[3], room->count);
+        sx_print("Room[%lu, %04lu, %04lu, %04lu, %04lu] -> %d players", r, room->matchmaking[0], room->matchmaking[1], room->matchmaking[2], room->matchmaking[3], room->count);
         total_rooms++;
         total_players += room->count;
     }
@@ -420,17 +423,17 @@ void server_report(void)
 void server_report_log(FILE* file)
 {
     fprintf(file, "token;id;room;index\n");
-    for (uint r = 0; r < LOBBY_CAPACITY; r++)
+    for (sx_uint r = 0; r < LOBBY_CAPACITY; r++)
     {
         Player* player = &server.lobby.players[r];
-        fprintf(file, "%d;%d;%d;%d;\n", player->token, player->id, player->room, player->index);
+        fprintf(file, "%lu;%d;%d;%d;\n", player->token, player->id, player->room, player->index);
     }
 
     fprintf(file, "index;count;m0;m1;m2;m3;p0;p1;p2;p3;\n");
-    for (uint r = 0; r < ROOM_COUNT; r++)
+    for (sx_uint r = 0; r < ROOM_COUNT; r++)
     {
         Room* room = &server.rooms[r];
-        fprintf(file, "%d;%d;%04d;%04d;%04d;%04d", r, room->count, room->matchmaking[0], room->matchmaking[1], room->matchmaking[2], room->matchmaking[3]);
+        fprintf(file, "%lu;%d;%04lu;%04lu;%04lu;%04lu", r, room->count, room->matchmaking[0], room->matchmaking[1], room->matchmaking[2], room->matchmaking[3]);
         for (int i = 0; i < ROOM_CAPACITY; i++)
         {
             Player* player = room->players[i];
@@ -469,8 +472,8 @@ void thread_listener(void* param)
 
     while (true)
     {
-        byte from[ADDRESS_LEN] = { 0 };
-        byte buffer[1024] = { 0 };
+        sx_byte from[ADDRESS_LEN] = { 0 };
+        sx_byte buffer[1024] = { 0 };
         sx_socket_receive(server.socket, buffer, 512, (struct sockaddr*)from);
 
         switch (buffer[0])
@@ -500,10 +503,10 @@ Config LoadConfig()
     config.player_master_timeout = 5000;
 
     FILE* file = null;
-    if (fopen_s(&file, "config.json", "r") == 0)
+    if (sx_fopen(&file, "config.json", "r") == 0)
     {
         char json_string[1024] = { 0 };
-        fread_s(json_string, sizeof(json_string), 1, sizeof(json_string), file);
+        sx_fread(json_string, sizeof(json_string), 1, sizeof(json_string), file);
 
         sx_json_node json_nodes[64] = { 0 };
         sx_json json = { 0 };
@@ -538,8 +541,8 @@ int main()
         sx_time_print(t, 64, sx_time_now());
         sx_print("server started on %s", t);
         sx_print("port: %d", config.port);
-        sx_print("player timeout: %d", config.player_timeout);
-        sx_print("player master timeout: %d", config.player_master_timeout);
+        sx_print("player timeout: %lu", config.player_timeout);
+        sx_print("player master timeout: %lu", config.player_master_timeout);
     }
 
     struct sx_thread* threads[THREAD_COUNTS] = { null };
@@ -556,7 +559,7 @@ int main()
         char cmd1[32] = { 0 };
         char cmd2[32] = { 0 };
         int value = 0;
-        sscanf_s(cmd, "%s %s %d", cmd1, 32, cmd2, 32, &value);
+        sx_scanf(cmd, "%s %s %d", cmd1, 32, cmd2, 32, &value);
 
         if (sx_str_cmp(cmd1, "report") == 0)
         {
@@ -570,7 +573,7 @@ int main()
         else if (sx_str_cmp(cmd1, "log") == 0)
         {
             FILE* file = null;
-            if (fopen_s(&file, cmd2, "a+") == 0)
+            if (sx_fopen(&file, cmd2, "a+") == 0)
             {
                 server_report_log(file);
                 fclose(file);

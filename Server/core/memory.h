@@ -40,8 +40,8 @@ used in type of classes which will alloc/free memory blocks frequently.
 */
 typedef struct sx_memory_manager
 {
-    void* (*alloc)( struct sx_memory_manager* manager, const uint size_in_byte );
-    void* (*realloc)( struct sx_memory_manager* manager, const void* p, const uint new_size_in_byte );
+    void* (*alloc)( struct sx_memory_manager* manager, const sx_uint size_in_byte );
+    void* (*realloc)( struct sx_memory_manager* manager, const void* p, const sx_uint new_size_in_byte );
     void* (*free)( struct sx_memory_manager* manager, const void* p );
 }
 sx_memory_manager;
@@ -54,12 +54,12 @@ extern "C" {
 SEGAN_LIB_API void mem_set_manager(struct sx_memory_manager* manager);
 SEGAN_LIB_API struct sx_memory_manager* mem_get_manager(void);
 
-SEGAN_LIB_API void* mem_alloc(const uint size_in_byte);
-SEGAN_LIB_API void* mem_realloc(void* p, const uint new_size_in_byte);
+SEGAN_LIB_API void* mem_alloc(const sx_uint size_in_byte);
+SEGAN_LIB_API void* mem_realloc(void* p, const sx_uint new_size_in_byte);
 SEGAN_LIB_API void* mem_free(const void* p);
-SEGAN_LIB_API void  mem_copy(void* dest, const void* src, const uint size);
-SEGAN_LIB_API sint  mem_cmp(const void* src1, const void* src2, const uint size);
-SEGAN_LIB_API void  mem_set(void* dest, const sint val, const uint size);
+SEGAN_LIB_API void  mem_copy(void* dest, const void* src, const sx_uint size);
+SEGAN_LIB_API sx_int  mem_cmp(const void* src1, const void* src2, const sx_uint size);
+SEGAN_LIB_API void  mem_set(void* dest, const sx_int val, const sx_uint size);
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -68,7 +68,7 @@ SEGAN_LIB_API void  mem_set(void* dest, const sint val, const uint size);
 //  initialization from OS and uses the allocated memory pool in any 
 //  allocation call. using this memory manager has restriction of block protection.
 //  create and return an instance to new memory manager. return null if function failed!
-SEGAN_LIB_API struct sx_memory_manager* sx_mem_pool_create(uint sizeinbyte);
+SEGAN_LIB_API struct sx_memory_manager* sx_mem_pool_create(sx_uint sizeinbyte);
 
 //! destroy memory pool and free allocated memory.
 SEGAN_LIB_API int sx_mem_pool_destroy(struct sx_memory_manager* mempool);

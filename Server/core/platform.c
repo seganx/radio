@@ -1,14 +1,15 @@
-#include "trace.h"
-#include "platform.h"
-
 #if defined(_WIN32)
 #include <windows.h>
+#include <conio.h>
 #else
 #include <unistd.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <errno.h>
 #endif
-#include <conio.h>
+
+#include "trace.h"
+#include "platform.h"
 
 //! mutex object
 typedef struct sx_mutex
@@ -44,7 +45,7 @@ typedef struct sx_semaphore
 //! thread object
 typedef struct sx_thread
 {
-    uint            id;
+    sx_uint            id;
     sx_thread_func  func;
     void*           param;
 
@@ -76,7 +77,7 @@ typedef struct threadpool_jobqueue
     sx_mutex        mutex;
     threadpool_job* front;
     threadpool_job* rear;
-    volatile uint   count;
+    volatile sx_uint   count;
 }
 threadpool_jobqueue;
 
@@ -88,9 +89,9 @@ typedef struct sx_threadpool
     sx_semaphore        semaphore;              //  semaphore used to signal threads in pool
     threadpool_jobqueue jobqueue;               //  multi-threaded safe queue of jobs
     sx_mutex            mutex;                  //  used to write on integere params
-    volatile uint       running;                //  indicates that thread pool is running
-    volatile uint       num_threads_ready;      //  number of created threads which are ready
-    volatile uint       num_threads_working;    //  number of threads which are working on jobs
+    volatile sx_uint       running;                //  indicates that thread pool is running
+    volatile sx_uint       num_threads_ready;      //  number of created threads which are ready
+    volatile sx_uint       num_threads_working;    //  number of threads which are working on jobs
 }
 sx_threadpool;
 
@@ -250,7 +251,7 @@ SEGAN_LIB_API int sx_cond_broadcast(struct sx_cond * cond)
 }
 
 
-static int sx_semaphore_init(struct sx_semaphore* semaphore, const uint init_count, const uint max_count)
+static int sx_semaphore_init(struct sx_semaphore* semaphore, const sx_uint init_count, const sx_uint max_count)
 {
 #if defined(_WIN32)
     semaphore->obj = CreateSemaphore(NULL, init_count, max_count, NULL);
@@ -272,7 +273,7 @@ static int sx_semaphore_finit(struct sx_semaphore* semaphore)
 #endif
 }
 
-SEGAN_LIB_API struct sx_semaphore * sx_semaphore_create(const uint init_count, const uint max_count)
+SEGAN_LIB_API struct sx_semaphore * sx_semaphore_create(const sx_uint init_count, const sx_uint max_count)
 {
     struct sx_semaphore * res = (struct sx_semaphore*)malloc(sizeof(struct sx_semaphore));
 
@@ -343,7 +344,7 @@ sx_thread_worker_internal(void* p) {
 #endif
 }
 
-static int sx_thread_init(struct sx_thread * thread, const uint id, sx_thread_func func, void * param)
+static int sx_thread_init(struct sx_thread * thread, const sx_uint id, sx_thread_func func, void * param)
 {
     thread->id = id;
     thread->func = func;
@@ -371,7 +372,7 @@ static int sx_thread_finit(struct sx_thread * thread)
 }
 
 
-SEGAN_LIB_API struct sx_thread * sx_thread_create(const uint id, sx_thread_func func, void * param)
+SEGAN_LIB_API struct sx_thread * sx_thread_create(const sx_uint id, sx_thread_func func, void * param)
 {
     struct sx_thread * res = (struct sx_thread *)malloc(sizeof(struct sx_thread));
     if (res == NULL || sx_thread_init(res, id, func, param) != 0)
@@ -391,13 +392,13 @@ SEGAN_LIB_API int sx_thread_destroy(struct sx_thread * thread)
     return res;
 }
 
-SEGAN_LIB_API uint sx_thread_id(struct sx_thread * thread)
+SEGAN_LIB_API sx_uint sx_thread_id(struct sx_thread * thread)
 {
     if (!thread)
 #if defined(_WIN32)
-        return (uint)GetCurrentThreadId();
+        return (sx_uint)GetCurrentThreadId();
 #else
-        return (uint)pthread_self();
+        return (sx_uint)pthread_self();
 #endif
     else return thread->id;
 }
@@ -521,7 +522,7 @@ static void threadpool_worker(void* p)
 }
 
 
-SEGAN_LIB_API struct sx_threadpool* sx_threadpool_create(const uint num_threads, const char* trace_filename)
+SEGAN_LIB_API struct sx_threadpool* sx_threadpool_create(const sx_uint num_threads, const char* trace_filename)
 {
     if (num_threads <= 0)
         return NULL;
@@ -570,7 +571,7 @@ SEGAN_LIB_API struct sx_threadpool* sx_threadpool_create(const uint num_threads,
         return NULL;
     }
 
-    for (uint i = 0; i < num_threads; ++i)
+    for (sx_uint i = 0; i < num_threads; ++i)
         sx_thread_init(&res->threads[i], i, threadpool_worker, res);
 
     // wait for threads to be initialized
@@ -583,7 +584,7 @@ SEGAN_LIB_API int sx_threadpool_destroy(sx_threadpool * threadpool)
 {
     if (threadpool == NULL) return 0;
 
-    volatile uint num_threads = threadpool->num_threads_ready;
+    volatile sx_uint num_threads = threadpool->num_threads_ready;
 
     //  wait for working threads to be finished
     while (threadpool->num_threads_working)
@@ -604,7 +605,7 @@ SEGAN_LIB_API int sx_threadpool_destroy(sx_threadpool * threadpool)
     sx_mutex_finit(&threadpool->mutex);
     jobqueue_destroy(&threadpool->jobqueue);
 
-    for (uint i = 0; i < num_threads; ++i)
+    for (sx_uint i = 0; i < num_threads; ++i)
         sx_thread_finit(&threadpool->threads[i]);
 
     free(threadpool->threads);
@@ -630,16 +631,16 @@ SEGAN_LIB_API int sx_threadpool_add_job(struct sx_threadpool* threadpool, sx_thr
     jobqueue_queue(&threadpool->jobqueue, job);
     sx_mutex_unlock(&threadpool->jobqueue.mutex);
 
-    //  release a thread to handle new job
+    //  release a thread to sx_handle new job
     return sx_semaphore_post(&threadpool->semaphore);
 }
 
-SEGAN_LIB_API uint sx_threadpool_num_jobs(struct sx_threadpool * threadpool)
+SEGAN_LIB_API sx_uint sx_threadpool_num_jobs(struct sx_threadpool * threadpool)
 {
     return threadpool->jobqueue.count;
 }
 
-SEGAN_LIB_API uint sx_threadpool_num_busy_threads(struct sx_threadpool * threadpool)
+SEGAN_LIB_API sx_uint sx_threadpool_num_busy_threads(struct sx_threadpool * threadpool)
 {
     return threadpool->num_threads_working;
 }
@@ -654,7 +655,7 @@ SEGAN_LIB_API unsigned long long sx_get_tick()
 #endif    
 }
 
-SEGAN_LIB_API void sx_sleep(const uint miliseconds)
+SEGAN_LIB_API void sx_sleep(const sx_uint miliseconds)
 {
 #if defined(_WIN32)
     Sleep(miliseconds);
@@ -671,3 +672,38 @@ SEGAN_LIB_API char sx_getch()
     return r;
 }
 
+SEGAN_LIB_API sx_int sx_fopen(FILE **f, const char *path, const char *mode)
+{
+#if defined(_WIN32)
+    return fopen_s(f, path, mode);
+#else
+    *f = fopen(path, mode);
+    return (*f != NULL) ? 0 : errno;
+#endif
+}
+
+SEGAN_LIB_API sx_int sx_scanf(const char *buffer, const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+#if defined(_WIN32)
+    int result = vsscanf_s(buffer, format, args);
+#else
+    int result = vsscanf(buffer, format, args);
+#endif
+
+    va_end(args);
+    return result;
+}
+
+SEGAN_LIB_API size_t sx_fread(void *buffer, size_t bufferSize, size_t elementSize, size_t elementCount, FILE *stream)
+{
+#if defined(_WIN32)
+    return fread_s(buffer, bufferSize, elementSize, elementCount, stream);
+#else
+    if (!buffer || !stream || elementSize == 0 || elementCount == 0) return 0;
+    if (elementSize * elementCount > bufferSize) return 0;
+    return fread(buffer, elementSize, elementCount, stream);
+#endif
+}
