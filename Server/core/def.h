@@ -20,16 +20,19 @@
 //  basic type definitions
 //////////////////////////////////////////////////////////////////////////
 
-typedef signed char				sx_sbyte;
-typedef unsigned char		    sx_byte;
-typedef unsigned short		    sx_ushort, 	sx_wchar;
-typedef signed long			    sx_int;
-typedef unsigned long		    sx_uint, 	sx_dword;
-typedef long long			    sx_int64;
-typedef unsigned long long		sx_ulong,	sx_uint64;
-typedef void*                   sx_handle;
-typedef int					    sx_hresult;
-
+#define sx_sbyte 	int8_t
+#define sx_byte		uint8_t
+#define sx_short    int16_t
+#define sx_ushort   uint16_t
+#define sx_wchar   	uint16_t
+#define sx_int		int32_t
+#define sx_uint		uint32_t
+#define sx_dword	uint32_t
+#define sx_int64	int64_t
+#define sx_ulong	uint64_t
+#define sx_uint64 	uint64_t
+#define sx_handle	void*
+#define sx_hresult 	int
 
 
 
@@ -96,10 +99,10 @@ typedef unsigned char bool;
 #if defined(_WIN32)
 #define SEGAN_LIB_INLINE					//__forceinline
 #else
-#define SEGAN_LIB_INLINE					inline
+#define SEGAN_LIB_INLINE					//static inline
 #endif
 
-#define SEGAN_INLINE						inline
+#define SEGAN_INLINE						//inline
 
 #if defined(_WIN32)
 	#define SEGAN_ALIGN_16					__declspec(align(16))

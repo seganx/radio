@@ -1,5 +1,6 @@
 #include "socket.h"
-#include "../core/trace.h"
+#include "core/trace.h"
+#include "core/platform.h"
 
 #if defined(_WIN32)
     #include <winsock2.h>

@@ -149,7 +149,7 @@ bool room_is_open(const Room* room, const sx_ulong now)
     return sx_time_diff(now, room->open_time) <= room->join_timeout;
 }
 
-bool room_is_match(Room* room, int* params)
+bool room_is_match(Room* room, sx_int* params)
 {
     bool result = true;
     for (sx_byte i = 0; i < ROOM_PARAMS && result; i++)
@@ -167,7 +167,7 @@ bool room_create(Server* server, Player* player, sx_byte capacity, sx_ulong time
     int roomid = room_find_empty(server);
     if (roomid < 0) return false;
     Room* room = &server->rooms[roomid];
-    room->capacity = min(capacity, ROOM_CAPACITY);
+    room->capacity = (capacity < ROOM_CAPACITY) ? capacity : ROOM_CAPACITY;
     room->join_timeout = timeout;
     room->open_time = sx_time_now();
     sx_mem_copy(room->properties, properties, ROOM_PROP_LEN);
@@ -267,7 +267,7 @@ void room_check_master(Server* server, sx_ulong now, const short roomid)
     sx_return();
 }
 
-void room_report(Server* server, int roomid)
+void room_report(Server* server, sx_int roomid)
 {
     if (roomid < 0 || roomid >= ROOM_COUNT) return;
 
@@ -284,5 +284,5 @@ void room_report(Server* server, int roomid)
 
 void player_report(Player* player)
 {
-    sx_print("Player flag[%d] token[%u] time[%llu] device:%.32s", player->flag, player->token, player->active_time, player->device);
+    sx_print("Player flag[%d] token[%lu] time[%llu] device:%.32s", player->flag, player->token, player->active_time, player->device);
 }

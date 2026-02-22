@@ -5,12 +5,14 @@
 #if defined(_WIN32)
 #include <Windows.h>
 #else
-#include <asm-generic/siginfo.h>
-#include <asm-generic/signal.h>
+#include <unistd.h>
+#include <execinfo.h>
+#include <ucontext.h>
 #endif
 
 #include "memory.h"
 #include "trace.h"
+#include "timer.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -707,7 +709,7 @@ static void trace_signal_handler(int sig, siginfo_t* sinfo, void *ucontext)
         struct tm timeInfo;
         char tmp[64] = {0};        
         time_t timeval = time(null);
-        localtime_s(&timeInfo, &timeval);
+        sx_localtime(&timeInfo, &timeval);
         strftime(tmp, 64, "%Y-%m-%d %H:%M:%S", &timeInfo);
         fprintf(fstr, "\n\nseganx crash report: %s\n", tmp);
     }
@@ -813,6 +815,18 @@ static void trace_signal_handler(int sig, siginfo_t* sinfo, void *ucontext)
     exit(EXIT_FAILURE);
 }
 
+static void trace_install_sigaction(int sig)
+{
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_sigaction = trace_signal_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_SIGINFO | SA_RESETHAND;
+
+    /* اگر خواستی، می‌تونی SA_ONSTACK هم اضافه کنی (با sigaltstack) */
+    sigaction(sig, &sa, NULL);
+}
+
 #endif // __linux__
 
 static void trace_set_crash_handler(void)
@@ -827,24 +841,13 @@ static void trace_set_crash_handler(void)
     signal(SIGFPE, trace_crash_signal_handler);
 #endif
 #ifdef __linux__
-    sigset_t sigset;
-    sigemptyset(&sigset);
-    sigaddset(&sigset, SIGABRT);
-    sigaddset(&sigset, SIGBUS);
-    sigaddset(&sigset, SIGILL);
-    sigaddset(&sigset, SIGSEGV);
-    sigaddset(&sigset, SIGFPE);
-
-    struct sigaction sa;
-    sa.sa_handler = trace_signal_handler;
-    sa.sa_mask = sigset;
-    sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
-
-    sigaction(SIGABRT, &sa, 0);
-    sigaction(SIGBUS, &sa, 0);
-    sigaction(SIGILL, &sa, 0);
-    sigaction(SIGSEGV, &sa, 0);
-    sigaction(SIGFPE, &sa, 0);
+    trace_install_sigaction(SIGTERM);
+    trace_install_sigaction(SIGSEGV);
+    trace_install_sigaction(SIGINT);
+    trace_install_sigaction(SIGILL);
+    trace_install_sigaction(SIGABRT);
+    trace_install_sigaction(SIGFPE);
+    trace_install_sigaction(SIGBUS); 
 #endif
 }
 

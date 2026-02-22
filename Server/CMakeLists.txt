@@ -16,9 +16,8 @@ add_executable(server
 
 target_include_directories(server PRIVATE
   ${CMAKE_SOURCE_DIR}
-  ${CMAKE_SOURCE_DIR}/core
-  ${CMAKE_SOURCE_DIR}/net
 )
+
 
 find_package(Threads REQUIRED)
 target_link_libraries(server PRIVATE Threads::Threads)

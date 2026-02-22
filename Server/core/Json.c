@@ -1,3 +1,4 @@
+#include "platform.h"
 #include "Json.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -360,7 +361,7 @@ SEGAN_LIB_API int sx_json_read_int(sx_json_node* node, const char* name, const i
     sx_json_read_string(node, name, tmp, 16);
    
     int res = default_value;
-    sscanf_s(tmp, "%d", &res);
+    sx_scanf(tmp, "%d", &res);
     return res;
 }
 

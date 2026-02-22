@@ -1,10 +1,12 @@
+#include <string.h>
+
 #if defined(_WIN32)
 #include <Windows.h>
 #endif
-#include <string.h>
 
 #include "trace.h"
 #include "memory.h"
+
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -63,7 +65,7 @@ SEGAN_LIB_INLINE void mem_copy(void* dest, const void* src, const sx_uint size)
     memcpy(dest, src, size);
 }
 
-SEGAN_LIB_INLINE sx_int mem_cmp(const void* src1, const void* src2, const sx_uint size)
+SEGAN_LIB_INLINE sx_uint mem_cmp(const void* src1, const void* src2, const sx_uint size)
 {
     return memcmp(src1, src2, size);
 }

@@ -58,8 +58,8 @@ SEGAN_LIB_API void* mem_alloc(const sx_uint size_in_byte);
 SEGAN_LIB_API void* mem_realloc(void* p, const sx_uint new_size_in_byte);
 SEGAN_LIB_API void* mem_free(const void* p);
 SEGAN_LIB_API void  mem_copy(void* dest, const void* src, const sx_uint size);
-SEGAN_LIB_API sx_int  mem_cmp(const void* src1, const void* src2, const sx_uint size);
 SEGAN_LIB_API void  mem_set(void* dest, const sx_int val, const sx_uint size);
+SEGAN_LIB_API sx_uint  mem_cmp(const void* src1, const void* src2, const sx_uint size);
 
 
 //////////////////////////////////////////////////////////////////////////

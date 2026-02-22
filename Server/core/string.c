@@ -2,6 +2,8 @@
 #include <string.h>
 
 #include "string.h"
+#include "platform.h"
+
 
 SEGAN_LIB_INLINE char sx_str_upper(char c) { return toupper(c); }
 SEGAN_LIB_INLINE char sx_str_lower(char c) { return tolower(c); }
@@ -9,7 +11,15 @@ SEGAN_LIB_INLINE char sx_str_lower(char c) { return tolower(c); }
 SEGAN_LIB_INLINE sx_uint sx_str_len(const char* str) { return str ? (sx_uint)strlen(str) : 0; }
 SEGAN_LIB_INLINE sx_int sx_str_cmp(const char* str1, const char* str2) { return str1 && str2 ? strcmp(str1, str2) : (str1 ? 1 : (str2 ? -1 : 0)); }
 SEGAN_LIB_INLINE const char* sx_str_str(const char* str, const char* what) { return str && what ? strstr(str, what) : null; }
-SEGAN_LIB_INLINE sx_int sx_str_copy(char* dest, const sx_int dest_size_in_byte, const char* src) { return strcpy_s(dest, dest_size_in_byte, src); }
+
+SEGAN_LIB_INLINE sx_int sx_str_copy(char* dest, const sx_int dest_size_in_byte, const char* src) 
+{ 
+#if defined(_WIN32)
+    return strcpy_s(dest, dest_size_in_byte, src);
+#else
+    return snprintf(dest, dest_size_in_byte, "%s", src);
+#endif
+}
 
 SEGAN_LIB_INLINE sx_int sx_str_split_count(const char* str, const char* split)
 {
@@ -48,7 +58,7 @@ SEGAN_LIB_INLINE sx_int sx_str_to_int(const char* str, const sx_int defaul_val /
 {
     if (!str) return defaul_val;
     sx_int res = defaul_val;
-    sscanf_s(str, "%d", &res);
+    sx_scanf(str, "%d", &res);
     return res;
 }
 
@@ -56,7 +66,7 @@ SEGAN_LIB_INLINE sx_uint sx_str_to_uint(const char* str, const sx_uint defaul_va
 {
     if (!str) return defaul_val;
     sx_uint res = defaul_val;
-    sscanf_s(str, "%u", &res);
+    sx_scanf(str, "%u", &res);
     return res;
 }
 
@@ -64,7 +74,7 @@ SEGAN_LIB_INLINE sx_uint64 sx_str_to_uint64(const char* str, const sx_uint64 def
 {
     if (!str) return defaul_val;
     sx_uint64 res = defaul_val;
-    sscanf_s(str, "%llu", &res);
+    sx_scanf(str, "%llu", &res);
     return res;
 }
 

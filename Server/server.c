@@ -559,7 +559,7 @@ int main()
         char cmd1[32] = { 0 };
         char cmd2[32] = { 0 };
         int value = 0;
-        sx_scanf(cmd, "%s %s %d", cmd1, 32, cmd2, 32, &value);
+        sx_scanf(cmd, "%31s %31s %d", cmd1, cmd2, &value);
 
         if (sx_str_cmp(cmd1, "report") == 0)
         {

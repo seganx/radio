@@ -664,11 +664,36 @@ SEGAN_LIB_API void sx_sleep(const sx_uint miliseconds)
 #endif	
 }
 
+static int sx_kbhit(void)
+{
+#if defined(_WIN32)
+    return _kbhit();
+#else
+    struct timeval tv = {0L, 0L};
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds);
+    return select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv) > 0;
+#endif
+}
+
+static char sx_getch_blocking(void)
+{
+#if defined(_WIN32)
+    return (char)_getch();
+#else
+    char c;
+    read(STDIN_FILENO, &c, 1);
+    return c;
+#endif
+}
+
+
 SEGAN_LIB_API char sx_getch()
 {
     char r = 0;
-    if (_kbhit())
-        r = _getch();
+    if (sx_kbhit())
+        r = sx_getch_blocking();
     return r;
 }
 
@@ -686,13 +711,7 @@ SEGAN_LIB_API sx_int sx_scanf(const char *buffer, const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-
-#if defined(_WIN32)
-    int result = vsscanf_s(buffer, format, args);
-#else
     int result = vsscanf(buffer, format, args);
-#endif
-
     va_end(args);
     return result;
 }

@@ -28,6 +28,6 @@ bool    room_join(Server* server, Player* player, sx_int* params);
 bool    room_add_player(Server* server, Player* player, const short roomid);
 void    room_remove_player(Server* server, Player* player);
 void    room_check_master(Server* server, sx_ulong now, const short roomid);
-void    room_report(Server* server, int roomid);
+void    room_report(Server* server, sx_int roomid);
 
 void    player_report(Player* player);
